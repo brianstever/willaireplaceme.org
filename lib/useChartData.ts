@@ -55,11 +55,11 @@ function filterByTimeRange<T extends { date: string }>(
   
   // anchor to latest data point, not today
   const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date));
-  const latestDate = new Date(sorted[sorted.length - 1].date + "-01");
+  const [year, month] = sorted[sorted.length - 1].date.split("-").map(Number);
   
-  const cutoffDate = new Date(latestDate);
-  cutoffDate.setMonth(cutoffDate.getMonth() - range.months);
-  const cutoffStr = cutoffDate.toISOString().slice(0, 7);
+  // use UTC to avoid timezone variance
+  const cutoffDate = new Date(Date.UTC(year, month - 1 - range.months, 1));
+  const cutoffStr = `${cutoffDate.getUTCFullYear()}-${String(cutoffDate.getUTCMonth() + 1).padStart(2, "0")}`;
   
   return data.filter(d => d.date >= cutoffStr);
 }
