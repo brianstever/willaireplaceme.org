@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import { SECTOR_LABELS } from "@/lib/bls";
 
 const SECTOR_DESCRIPTIONS: Record<string, string> = {
+  // Job openings sectors
   total: "All nonfarm job openings across all industries in the United States",
   manufacturing: "Durable and nondurable goods production, factories, and assembly plants",
   healthcare: "Hospitals, physician offices, nursing facilities, and ambulatory care",
@@ -11,24 +12,40 @@ const SECTOR_DESCRIPTIONS: Record<string, string> = {
   professional: "Legal, accounting, architecture, engineering, consulting, and technical services",
   information: "Software, data processing, telecommunications, publishing, and broadcasting",
   government: "Federal, state, and local government positions excluding military",
+  // Unemployment rate sectors (unemployment_rate is "total" for this view)
+  unemployment_rate: "Civilian unemployment rate across all industries",
+  unemployment_manufacturing: "Unemployment rate in manufacturing sector",
+  unemployment_healthcare: "Unemployment rate in healthcare and social assistance",
+  unemployment_retail: "Unemployment rate in retail trade",
+  unemployment_professional: "Unemployment rate in professional and business services",
+  unemployment_information: "Unemployment rate in information sector",
+  unemployment_government: "Unemployment rate in public administration",
+  // Participation rate
+  participation_rate: "Labor force participation rate across all industries",
 };
 
 interface SectorFilterProps {
   sectors: string[];
   selectedSectors: string[];
   onToggle: (sector: string) => void;
+  accentColor?: string;
 }
 
-export function SectorFilter({ sectors, selectedSectors, onToggle }: SectorFilterProps) {
+export function SectorFilter({ sectors, selectedSectors, onToggle, accentColor = "#ef4444" }: SectorFilterProps) {
   const [hoveredSector, setHoveredSector] = useState<string | null>(null);
   const descriptionId = useId();
 
-  // "total" first, then alphabetical; skip unemployment (different unit)
+  // Detect view mode based on sectors passed
+  const isUnemploymentMode = sectors.some(s => s.startsWith("unemployment_"));
+  const isParticipationMode = sectors.includes("participation_rate");
+  const isRateMode = isUnemploymentMode || isParticipationMode;
+  
+  // Sort: total/unemployment_rate/participation_rate first, then alphabetical
   const sortedSectors = [...sectors]
-    .filter((s) => s !== "unemployment_rate")
     .sort((a, b) => {
-      if (a === "total") return -1;
-      if (b === "total") return 1;
+      // "Total" sectors come first
+      if (a === "total" || a === "unemployment_rate" || a === "participation_rate") return -1;
+      if (b === "total" || b === "unemployment_rate" || b === "participation_rate") return 1;
       return a.localeCompare(b);
     });
 
@@ -36,12 +53,29 @@ export function SectorFilter({ sectors, selectedSectors, onToggle }: SectorFilte
     <div className="space-y-2">
       <div 
         role="group" 
-        aria-label="Filter by economic sector"
+        aria-label={
+          isUnemploymentMode ? "Filter unemployment by industry" : 
+          isParticipationMode ? "Filter participation by industry" :
+          "Filter by economic sector"
+        }
         className="flex flex-wrap gap-2"
       >
         {sortedSectors.map((sector) => {
           const isSelected = selectedSectors.includes(sector);
+          const isHovered = hoveredSector === sector;
           const sectorDescId = `${descriptionId}-${sector}`;
+          
+          // Build style based on state
+          const buttonStyle: React.CSSProperties | undefined = 
+            isSelected ? { 
+              backgroundColor: `${accentColor}15`,
+              borderColor: accentColor,
+              color: accentColor,
+              boxShadow: `0 0 0 1px ${accentColor}30`
+            } : isHovered ? {
+              borderColor: accentColor,
+              color: accentColor,
+            } : undefined;
           
           return (
             <button
@@ -54,6 +88,7 @@ export function SectorFilter({ sectors, selectedSectors, onToggle }: SectorFilte
               aria-pressed={isSelected}
               aria-describedby={sectorDescId}
               className={`sector-pill ${isSelected ? "active" : ""}`}
+              style={buttonStyle}
             >
               {SECTOR_LABELS[sector] || sector}
               <span id={sectorDescId} className="sr-only">

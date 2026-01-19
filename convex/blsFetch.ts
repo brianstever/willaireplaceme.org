@@ -3,7 +3,7 @@
 import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 
-// BLS series IDs - JOLTS job openings + unemployment
+// BLS series IDs - JOLTS job openings + CPS rates
 const BLS_SERIES: Record<string, string> = {
   total: "JTS000000000000000JOL",
   manufacturing: "JTS300000000000000JOL",
@@ -12,7 +12,16 @@ const BLS_SERIES: Record<string, string> = {
   professional: "JTS540000000000000JOL",
   information: "JTS510000000000000JOL",
   government: "JTS900000000000000JOL",
-  unemployment_rate: "LNS14000000", // from CPS, released first Friday
+  unemployment_rate: "LNS14000000", // from CPS, released first Friday (also serves as "total" unemployment)
+  participation_rate: "LNS11300000", // Labor Force Participation Rate
+  // Industry-specific unemployment rates (CPS)
+  // Note: unemployment_rate serves as the "total" unemployment, industry-specific below
+  unemployment_manufacturing: "LNU04032300",
+  unemployment_healthcare: "LNU04032622",
+  unemployment_retail: "LNU04032400",
+  unemployment_professional: "LNU04032540",
+  unemployment_information: "LNU04032500",
+  unemployment_government: "LNU04032900",
 };
 
 interface BLSDataPoint {

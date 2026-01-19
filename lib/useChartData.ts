@@ -10,6 +10,10 @@ interface UseChartDataOptions {
   onRangeChange?: (range: string) => void;
   /** Default range for uncontrolled mode */
   defaultRange?: string;
+  /** Skip filtering out unemployment_rate (for unemployment chart) */
+  includeUnemploymentRate?: boolean;
+  /** How trend values should be expressed */
+  trendUnit?: "%" | "pp";
 }
 
 interface TrendInfo {
@@ -17,6 +21,7 @@ interface TrendInfo {
   percentChange: string;
   absoluteChange?: string;
   isAggregate?: boolean;
+  unit?: "%" | "pp"; // percent vs percentage points
 }
 
 interface ChartDataResult<T> {
@@ -38,7 +43,7 @@ interface ChartDataResult<T> {
   setShowTrendline: (show: boolean) => void;
 }
 
-// Filter data by time range
+// Filter data by time range, anchored to latest data point (not system date)
 function filterByTimeRange<T extends { date: string }>(
   data: T[],
   rangeLabel: string
@@ -48,7 +53,11 @@ function filterByTimeRange<T extends { date: string }>(
   const range = TIME_RANGES.find(r => r.label === rangeLabel);
   if (!range || range.months === 0) return data;
   
-  const cutoffDate = new Date();
+  // anchor to latest data point, not today
+  const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date));
+  const latestDate = new Date(sorted[sorted.length - 1].date + "-01");
+  
+  const cutoffDate = new Date(latestDate);
   cutoffDate.setMonth(cutoffDate.getMonth() - range.months);
   const cutoffStr = cutoffDate.toISOString().slice(0, 7);
   
@@ -113,11 +122,13 @@ export function useSimpleChartData(
   const trendInfo = useMemo((): TrendInfo | null => {
     if (chartData.length < 2) return null;
     
+    // for rate data (unemployment, participation), change is in percentage points
     const change = chartData[chartData.length - 1].value - chartData[0].value;
     return {
       direction: change > 0 ? "up" : "down",
-      percentChange: `${Math.abs(change).toFixed(1)}%`,
+      percentChange: `${Math.abs(change).toFixed(1)} pp`,
       absoluteChange: Math.abs(change).toFixed(1),
+      unit: "pp",
     };
   }, [chartData]);
 
@@ -133,13 +144,19 @@ export function useSimpleChartData(
   };
 }
 
-// Multi-sector series (job openings)
+// Multi-sector series (job openings and unemployment by industry)
 export function useMultiSeriesChartData(
   data: Array<{ date: string; sector: string; value: number }>,
   selectedSectors: string[],
   options: UseChartDataOptions = {}
 ): ChartDataResult<Record<string, unknown>> {
-  const { selectedRange: controlledRange, onRangeChange, defaultRange = "3Y" } = options;
+  const {
+    selectedRange: controlledRange,
+    onRangeChange,
+    defaultRange = "3Y",
+    includeUnemploymentRate = false,
+    trendUnit = "%",
+  } = options;
   
   const [internalRange, setInternalRange] = useState(defaultRange);
   const selectedRange = controlledRange ?? internalRange;
@@ -153,10 +170,12 @@ export function useMultiSeriesChartData(
   
   const [showTrendline, setShowTrendline] = useState(true);
 
-  // Filter out unemployment from sectors
+  // Filter out unemployment_rate from job openings sectors (unless explicitly included)
   const chartSectors = useMemo(
-    () => selectedSectors.filter(s => s !== "unemployment_rate"),
-    [selectedSectors]
+    () => includeUnemploymentRate 
+      ? selectedSectors 
+      : selectedSectors.filter(s => s !== "unemployment_rate"),
+    [selectedSectors, includeUnemploymentRate]
   );
 
   // Pivot data: group by date, spread sector values as columns
@@ -245,6 +264,31 @@ export function useMultiSeriesChartData(
 
   const trendInfo = useMemo((): TrendInfo | null => {
     if (chartData.length < 2) return null;
+
+    if (trendUnit === "pp") {
+      const changes: number[] = [];
+
+      for (const sector of chartSectors) {
+        const firstVal = chartData[0][sector] as number;
+        const lastVal = chartData[chartData.length - 1][sector] as number;
+
+        if (firstVal !== undefined && lastVal !== undefined && !isNaN(firstVal) && !isNaN(lastVal)) {
+          changes.push(lastVal - firstVal);
+        }
+      }
+
+      if (changes.length === 0) return null;
+
+      const avgChange = changes.reduce((a, b) => a + b, 0) / changes.length;
+
+      return {
+        direction: avgChange >= 0 ? "up" : "down",
+        percentChange: `${Math.abs(avgChange).toFixed(1)} pp`,
+        absoluteChange: Math.abs(avgChange).toFixed(1),
+        isAggregate: chartSectors.length > 1,
+        unit: "pp",
+      };
+    }
     
     const percentChanges: number[] = [];
     
@@ -262,12 +306,14 @@ export function useMultiSeriesChartData(
     
     const avgPercentChange = percentChanges.reduce((a, b) => a + b, 0) / percentChanges.length;
     
+    // job openings use true percent change
     return {
       direction: avgPercentChange >= 0 ? "up" : "down",
       percentChange: `${Math.abs(avgPercentChange).toFixed(1)}%`,
       isAggregate: chartSectors.length > 1,
+      unit: "%",
     };
-  }, [chartData, chartSectors]);
+  }, [chartData, chartSectors, trendUnit]);
 
   return {
     chartData,

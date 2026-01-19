@@ -10,6 +10,19 @@ export const BLS_SERIES = {
 } as const;
 
 export const UNEMPLOYMENT_SERIES = "LNS14000000";
+export const PARTICIPATION_SERIES = "LNS11300000";
+
+// Industry-specific unemployment rates (CPS)
+// Note: unemployment_rate (LNS14000000) serves as the "total" unemployment
+export const UNEMPLOYMENT_BY_INDUSTRY = {
+  unemployment_rate: "LNS14000000", // Total (same as UNEMPLOYMENT_SERIES)
+  unemployment_manufacturing: "LNU04032300",
+  unemployment_healthcare: "LNU04032622",
+  unemployment_retail: "LNU04032400",
+  unemployment_professional: "LNU04032540",
+  unemployment_information: "LNU04032500",
+  unemployment_government: "LNU04032900",
+} as const;
 
 export const SECTOR_LABELS: Record<string, string> = {
   total: "TOTAL NONFARM",
@@ -19,7 +32,15 @@ export const SECTOR_LABELS: Record<string, string> = {
   professional: "PROFESSIONAL SERVICES",
   information: "INFORMATION/TECH",
   government: "GOVERNMENT",
-  unemployment_rate: "UNEMPLOYMENT RATE",
+  unemployment_rate: "ALL INDUSTRIES", // Used as "total" in unemployment filter
+  participation_rate: "ALL INDUSTRIES", // Used as "total" in participation filter
+  // Industry unemployment labels
+  unemployment_manufacturing: "MANUFACTURING",
+  unemployment_healthcare: "HEALTHCARE",
+  unemployment_retail: "RETAIL",
+  unemployment_professional: "PROFESSIONAL SERVICES",
+  unemployment_information: "INFORMATION/TECH",
+  unemployment_government: "GOVERNMENT",
 };
 
 export const SECTOR_COLORS: Record<string, string> = {
@@ -30,7 +51,15 @@ export const SECTOR_COLORS: Record<string, string> = {
   professional: "#a855f7",
   information: "#ec4899",
   government: "#06b6d4",
-  unemployment_rate: "#06b6d4",
+  unemployment_rate: "#06b6d4", // Also used as "total" in unemployment filter
+  participation_rate: "#a855f7",
+  // Industry unemployment colors (match job openings)
+  unemployment_manufacturing: "#f59e0b",
+  unemployment_healthcare: "#22c55e",
+  unemployment_retail: "#3b82f6",
+  unemployment_professional: "#a855f7",
+  unemployment_information: "#ec4899",
+  unemployment_government: "#06b6d4",
 };
 
 export type Sector = keyof typeof BLS_SERIES;

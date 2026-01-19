@@ -36,7 +36,9 @@ describe("SectorFilter", () => {
     expect(buttons[0]).toHaveTextContent(/total nonfarm/i);
   });
 
-  it("filters out unemployment_rate sector", () => {
+  it("shows unemployment_rate when passed (filtering now done by parent)", () => {
+    // SectorFilter now shows all sectors passed to it
+    // Filtering is done in page.tsx before passing to SectorFilter
     const sectorsWithUnemployment = [...mockSectors, "unemployment_rate"];
     
     render(
@@ -47,7 +49,9 @@ describe("SectorFilter", () => {
       />
     );
 
-    expect(screen.queryByRole("button", { name: /unemployment/i })).not.toBeInTheDocument();
+    // unemployment_rate shows as "ALL INDUSTRIES" when passed
+    const allIndustriesButtons = screen.getAllByRole("button", { name: /all industries/i });
+    expect(allIndustriesButtons.length).toBeGreaterThan(0);
   });
 
   it("applies active class to selected sectors", () => {

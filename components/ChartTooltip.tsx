@@ -90,3 +90,32 @@ export function UnemploymentTooltip(props: ChartTooltipProps) {
     />
   );
 }
+
+// Map unemployment sector to display label (strip unemployment_ prefix)
+function getUnemploymentLabel(sector: string): string {
+  // unemployment_manufacturing -> MANUFACTURING
+  const baseSector = sector.replace("unemployment_", "");
+  return SECTOR_LABELS[sector] || SECTOR_LABELS[baseSector] || baseSector.toUpperCase();
+}
+
+// Pre-configured tooltip for multi-industry unemployment chart
+export function UnemploymentMultiTooltip(props: ChartTooltipProps) {
+  return (
+    <ChartTooltip
+      {...props}
+      valueFormatter={(value) => `${value.toFixed(1)}%`}
+      labelFormatter={getUnemploymentLabel}
+    />
+  );
+}
+
+// Pre-configured tooltip for participation rate chart
+export function ParticipationTooltip(props: ChartTooltipProps) {
+  return (
+    <ChartTooltip
+      {...props}
+      valueFormatter={(value) => `${value.toFixed(1)}%`}
+      labelFormatter={() => "Participation Rate"}
+    />
+  );
+}
