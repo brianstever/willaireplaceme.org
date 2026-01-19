@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/react";
 import { ConvexClientProvider } from "@/components/ConvexClientProvider";
 import { SkipLink } from "@/components/SkipLink";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -45,6 +46,7 @@ export default function RootLayout({
         <ConvexClientProvider>
           <ErrorBoundary>{children}</ErrorBoundary>
         </ConvexClientProvider>
+        <Analytics />
       </body>
     </html>
   );
