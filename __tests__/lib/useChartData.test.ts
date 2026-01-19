@@ -33,10 +33,9 @@ describe("useSimpleChartData", () => {
   it("returns filtered data based on time range", () => {
     const { result } = renderHook(() => useSimpleChartData(mockData, { defaultRange: "1Y" }));
 
-    // 1Y filters to ~12 months from latest data point (2025-03)
-    // Note: JS Date math gives 2024-02 due to month boundary handling
+    // 1Y filters to 12 months from latest data point (2025-03 -> 2024-03)
     expect(result.current.chartData.length).toBeLessThan(mockData.length);
-    expect(result.current.chartData[0].date).toBe("2024-02");
+    expect(result.current.chartData[0].date).toBe("2024-03");
   });
 
   it("returns all data when range is ALL", () => {

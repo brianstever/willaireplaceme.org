@@ -8,12 +8,11 @@ export function DashboardHeader({ lastUpdated }: DashboardHeaderProps) {
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         <div className="flex items-baseline gap-2">
           <h1 className="text-sm font-medium tracking-wide">
-            <span className="hidden sm:inline">Job Openings & Labor Turnover Survey</span>
-            <span className="sm:hidden">JOLTS</span>
+            Will AI Replace Me?
+            <span className="text-muted-foreground font-normal mx-1.5 hidden sm:inline">|</span>
+            <span className="hidden lg:inline text-muted-foreground font-normal">Job Openings & Labor Turnover Survey</span>
+            <span className="hidden sm:inline lg:hidden text-muted-foreground font-normal">JOLTS</span>
           </h1>
-          <span className="hidden sm:inline text-[10px] text-muted-foreground font-mono tracking-wider">
-            JOLTS
-          </span>
         </div>
         <div className="flex items-center gap-4 text-[10px] text-muted-foreground font-mono tracking-wider">
           <span>BLS DATA</span>
