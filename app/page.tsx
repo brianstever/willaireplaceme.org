@@ -3,12 +3,12 @@
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState, useMemo } from "react";
-import { DashboardHeader } from "@/components/DashboardHeader";
-import { DashboardFooter } from "@/components/DashboardFooter";
-import { DashboardStatsSection } from "@/components/DashboardStatsSection";
-import { DashboardChartPanel } from "@/components/DashboardChartPanel";
-import { DashboardSectorFilters } from "@/components/DashboardSectorFilters";
-import { ViewToggle, ViewMode } from "@/components/ViewToggle";
+import { DashboardHeader } from "@/app/_components/DashboardHeader";
+import { DashboardFooter } from "@/app/_components/DashboardFooter";
+import { DashboardStatsSection } from "@/app/_components/DashboardStatsSection";
+import { DashboardChartPanel } from "@/app/_components/DashboardChartPanel";
+import { DashboardSectorFilters } from "@/app/_components/DashboardSectorFilters";
+import { ViewToggle, ViewMode } from "@/app/_components/ViewToggle";
 import { SECTOR_LABELS } from "@/lib/bls";
 import { formatDateAbbreviated } from "@/lib/chart-utils";
 
@@ -141,7 +141,8 @@ export default function Home() {
       })
     : null;
 
-  const isLoading = !jobData || !latestData;
+  // Wait for all stats data before showing StatsBar to prevent layout shift
+  const isLoading = !jobData || !latestData || !peakData || !unemploymentRate || !participationRate;
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
@@ -174,6 +175,7 @@ export default function Home() {
 
           <DashboardSectorFilters
             viewMode={viewMode}
+            isLoading={isLoading}
             sectors={sectors}
             selectedSectors={selectedSectors}
             onSectorToggle={handleSectorToggle}

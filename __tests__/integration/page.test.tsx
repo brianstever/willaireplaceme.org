@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 // Mock data
@@ -101,12 +101,6 @@ const mockUnemploymentByIndustry = [
 
 const mockUnemploymentSectors = ["unemployment_rate", "unemployment_healthcare"];
 
-// Track mock state - using an object so the module-level mock can access it
-const mockState = {
-  isLoading: false,
-  callCount: 0,
-};
-
 // Mock the entire convex/react module  
 const mockUseQuery = vi.fn();
 
@@ -116,31 +110,26 @@ vi.mock("convex/react", () => ({
 
 // Import after mocking
 import Home from "@/app/page";
+import { getFunctionName } from "convex/server";
+
+const queryData = new Map<string, unknown>([
+  ["jobs:getJobOpenings", mockJobData],
+  ["jobs:getLatestBySector", mockLatestData],
+  ["jobs:getPeakValue", mockPeakData],
+  ["jobs:getMetadata", mockMetadata],
+  ["jobs:getDataAnalysis", mockAnalysis],
+  ["jobs:getUnemploymentRate", mockUnemploymentRate],
+  ["jobs:getParticipationRate", mockParticipationRate],
+  ["jobs:getUnemploymentByIndustry", mockUnemploymentByIndustry],
+  ["jobs:getUnemploymentSectors", mockUnemploymentSectors],
+]);
 
 describe("Home Page Integration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockState.isLoading = false;
-    mockState.callCount = 0;
-    
-    const results = [
-      mockJobData,               // 0: getJobOpenings
-      mockLatestData,            // 1: getLatestBySector
-      mockPeakData,              // 2: getPeakValue
-      mockMetadata,              // 3: getMetadata
-      mockAnalysis,              // 4: getDataAnalysis
-      mockUnemploymentRate,      // 5: getUnemploymentRate
-      mockParticipationRate,     // 6: getParticipationRate
-      mockUnemploymentByIndustry,// 7: getUnemploymentByIndustry
-      mockUnemploymentSectors,   // 8: getUnemploymentSectors
-    ];
-    
-    mockUseQuery.mockImplementation(() => {
-      if (mockState.isLoading) return undefined;
-      const result = results[mockState.callCount % results.length];
-      mockState.callCount++;
-      if (mockState.callCount >= 9) mockState.callCount = 0;
-      return result;
+    mockUseQuery.mockImplementation((query: unknown) => {
+      const name = getFunctionName(query as Parameters<typeof getFunctionName>[0]);
+      return queryData.get(name);
     });
   });
 
@@ -200,13 +189,12 @@ describe("Home Page Integration", () => {
     expect(screen.getByRole("button", { name: /all industries/i })).toBeInTheDocument();
   });
 
-  // Skip: Mock timing issues with React re-renders make this test flaky
-  it.skip("displays rotating insights container", () => {
+  it("displays rotating insights container", () => {
     render(<Home />);
 
     // Should show an insight container
-    const insightContainer = screen.getByRole("status");
-    expect(insightContainer).toBeInTheDocument();
+    const insightContainers = screen.getAllByRole("status");
+    expect(insightContainers.length).toBeGreaterThan(0);
   });
 
   it("renders header with title", () => {
@@ -231,30 +219,41 @@ describe("Home Page Integration", () => {
     expect(screen.getByText(/MAR 15, 2024/i)).toBeInTheDocument();
   });
 
-  // Skip: Mock timing issues with React re-renders - unemployment data arrives at wrong index
-  it.skip("shows unemployment rate", () => {
+  it("shows unemployment rate", async () => {
+    vi.useFakeTimers();
     render(<Home />);
 
     // Should show unemployment rate
+    await act(async () => {
+      vi.advanceTimersByTime(2500);
+    });
     expect(screen.getByText("4.1%")).toBeInTheDocument();
+    vi.useRealTimers();
   });
 
-  // Skip: Mock timing issues with React re-renders
-  it.skip("renders sparkline for unemployment", () => {
+  it("renders sparkline for unemployment", () => {
     render(<Home />);
 
     // Should have sparkline SVG
-    const sparkline = screen.getByRole("img", { name: /unemployment rate trend/i });
+    const sparkline = screen.getByRole("img", {
+      name: /unemployment trend, currently 4\.1%/i,
+    });
     expect(sparkline).toBeInTheDocument();
     expect(sparkline.tagName.toLowerCase()).toBe("svg");
   });
 
-  // Skip: Mock timing issues with React re-renders
-  it.skip("shows unemployment year-over-year change", () => {
+  it("shows unemployment year-over-year change", async () => {
+    vi.useFakeTimers();
     render(<Home />);
 
     // Should show YoY change
-    expect(screen.getByText(/\+0\.6/)).toBeInTheDocument();
+    await act(async () => {
+      vi.advanceTimersByTime(2500);
+    });
+    expect(
+      screen.getByText((_, node) => node?.textContent === "+0.6")
+    ).toBeInTheDocument();
+    vi.useRealTimers();
   });
 
   it("total sector is selected by default", () => {

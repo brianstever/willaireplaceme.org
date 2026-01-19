@@ -1,5 +1,4 @@
 "use client";
-
 import { ChartErrorBoundary } from "./ChartErrorBoundary";
 import { ChartSkeleton } from "./ChartSkeleton";
 import { JobChart } from "./JobChart";

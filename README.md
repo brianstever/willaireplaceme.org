@@ -20,6 +20,7 @@ As AI transforms the labor market (and my career prospects), this dashboard prov
 - **Multi-Sector Analysis**: Compare job openings across manufacturing, healthcare, retail, tech, and more
 - **Interactive Charts**: Time range filtering (1Y, 3Y, 5Y, 10Y, ALL) with trendline visualization
 - **Three Data Views**: Toggle between job openings, unemployment rate, and labor force participation rate
+- **ChatGPT Release Date Marker**: Vertical reference line at November 2022—notably the local maximum before the decline (coincidence?)
 - **Auto-Generated Insights**: Dynamic analysis including peak comparisons and sector trends
 - **Loading Skeletons**: Professional loading states with animated placeholders
 - **Responsive Design**: Modern dark theme optimized for all screen sizes
@@ -84,26 +85,19 @@ As AI transforms the labor market (and my career prospects), this dashboard prov
 ```
 willaireplaceme.org/
 ├── app/                    # Next.js App Router pages
+│   ├── _components/       # Dashboard-only components
 │   ├── page.tsx           # Main dashboard
 │   ├── about/             # About page
+│   │   ├── _components/   # About-only components
+│   │   └── page.tsx       # About page
 │   ├── layout.tsx         # Root layout
 │   └── globals.css        # Global styles
 ├── __tests__/             # Test files
 │   ├── lib/               # Utility function tests
 │   ├── components/        # Component tests
 │   └── integration/       # Page integration tests
-├── components/            # React components
-│   ├── JobChart.tsx       # Job openings chart
-│   ├── UnemploymentChart.tsx  # Unemployment rate chart
-│   ├── ParticipationChart.tsx # Labor force participation rate chart
-│   ├── ChartControls.tsx  # Shared chart controls
-│   ├── ChartTooltip.tsx   # Shared tooltip components
-│   ├── ChartSkeleton.tsx  # Loading skeleton for charts
-│   ├── StatsSkeleton.tsx  # Loading skeleton for stats
-│   ├── SectorFilter.tsx   # Sector selection UI
-│   ├── AnimatedCounter.tsx    # Animated number display
+├── components/            # Shared React components
 │   ├── ErrorBoundary.tsx  # Generic error boundary
-│   ├── ChartErrorBoundary.tsx # Chart-specific error boundary
 │   ├── SkipLink.tsx       # Accessibility skip navigation
 │   └── ConvexClientProvider.tsx  # Convex provider wrapper
 ├── convex/                # Convex backend
@@ -157,6 +151,9 @@ Data is released monthly by BLS:
 ## Testing
 
 This project uses [Vitest](https://vitest.dev/) with [Testing Library](https://testing-library.com/) for testing.
+
+Note: some environments may print ExperimentalWarning messages from jsdom/parse5 when running tests.
+These are dependency-level warnings (not test failures) and will be addressed via dependency upgrades.
 
 ### Running Tests
 
@@ -237,6 +234,17 @@ The codebase follows DRY principles with shared infrastructure:
 Professional skeleton components provide smooth loading experiences:
 - `ChartSkeleton` - Animated chart placeholder
 - `StatsSkeleton` - Stats section placeholder
+
+## Roadmap
+
+Potential future enhancements under consideration:
+
+- [ ] **Global Data**: International labor market data from OECD, Eurostat, and ILO to enable cross-country comparisons. Challenges include normalizing different data formats, update frequencies, and sector classifications across sources.
+- [ ] **Additional AI Milestones**: More reference markers for significant AI releases (GPT-4, Claude, etc.)
+- [ ] **Vacancy-to-Unemployment Ratio**: Calculated metric showing labor market tightness
+- [ ] **Export Functionality**: Download charts and data as PNG/CSV
+
+Have a feature request? [Open an issue](https://github.com/brianstever/willaireplaceme.org/issues) on GitHub.
 
 ## Contributing
 

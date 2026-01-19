@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 interface DashboardHeaderProps {
   lastUpdated: string | null;
 }
@@ -15,7 +17,13 @@ export function DashboardHeader({ lastUpdated }: DashboardHeaderProps) {
           </h1>
         </div>
         <div className="flex items-center gap-4 text-[10px] text-muted-foreground font-mono tracking-wider">
-          <span>BLS DATA</span>
+          <Link 
+            href="/about" 
+            className="sm:hidden text-xs hover:text-accent transition-colors"
+          >
+            About
+          </Link>
+          <span className="hidden sm:inline">BLS DATA</span>
           {lastUpdated && (
             <span className="hidden sm:inline opacity-60">{lastUpdated.toUpperCase()}</span>
           )}
