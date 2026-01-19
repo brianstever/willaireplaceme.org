@@ -73,6 +73,21 @@ export default function AboutPage() {
               The data is refreshed automatically via scheduled background jobs using Convex, 
               ensuring you always see the most current figures.
             </p>
+            <div className="bg-card/30 border border-card-border rounded p-4">
+              <h3 className="font-mono text-xs text-accent mb-2">AI SKILL MENTIONS (EXPERIMENTAL)</h3>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                The dashboard may also display an optional, live “AI skill mentions” signal sourced from{" "}
+                <a
+                  href="https://www.usajobs.gov/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-foreground underline decoration-white/10 hover:decoration-accent/60"
+                >
+                  USAJOBS
+                </a>{" "}
+                (federal job postings) over the most recent period. This signal is keyword-based.
+              </p>
+            </div>
             <div className="bg-card/50 border border-card-border rounded p-4 space-y-3">
               <h3 className="font-mono text-xs text-foreground">DATA SERIES USED</h3>
               <div className="grid grid-cols-1 gap-2 text-xs font-mono">

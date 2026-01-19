@@ -2,13 +2,14 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { DashboardFooter } from "@/components/DashboardFooter";
 import { DashboardStatsSection } from "@/components/DashboardStatsSection";
 import { DashboardChartPanel } from "@/components/DashboardChartPanel";
 import { DashboardSectorFilters } from "@/components/DashboardSectorFilters";
 import { ViewToggle, ViewMode } from "@/components/ViewToggle";
+import { AiPressurePanel, type AiPressureSectorData } from "@/components/AiPressurePanel";
 import { SECTOR_LABELS } from "@/lib/bls";
 import { formatDateAbbreviated } from "@/lib/chart-utils";
 
@@ -18,6 +19,12 @@ export default function Home() {
   const [selectedParticipationSectors, setSelectedParticipationSectors] = useState<string[]>(["participation_rate"]);
   const [viewMode, setViewMode] = useState<ViewMode>("openings");
   const [timeRange, setTimeRange] = useState<string>("3Y");
+  const [aiDays] = useState<number>(14);
+  const [aiPressure, setAiPressure] = useState<{
+    days: number;
+    generatedAt: string;
+    sectors: Record<string, AiPressureSectorData>;
+  } | null>(null);
 
   // --- Data ---
   const jobData = useQuery(api.jobs.getJobOpenings, {});
@@ -74,6 +81,26 @@ export default function Home() {
     return result;
   }, [analysis]);
 
+  // --- USAJOBS AI signal (cached API route) ---
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetch(`/api/ai-skill-pressure?days=${aiDays}`);
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!cancelled && json?.sectors) {
+          setAiPressure(json);
+        }
+      } catch {
+        // ignore; feature degrades gracefully if API/env not configured
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [aiDays]);
   const sectors = useMemo(() => {
     if (jobDataItems.length === 0) return [];
 
@@ -182,7 +209,25 @@ export default function Home() {
             onUnemploymentSectorToggle={handleUnemploymentSectorToggle}
             selectedParticipationSectors={selectedParticipationSectors}
             onParticipationSectorToggle={(sector) => setSelectedParticipationSectors([sector])}
+            aiPressureBySector={
+              aiPressure?.sectors
+                ? Object.fromEntries(
+                    Object.entries(aiPressure.sectors).map(([k, v]) => [
+                      k,
+                      { aiShare: v.aiShare, total: v.total, note: v.note, error: v.error },
+                    ])
+                  )
+                : undefined
+            }
           />
+
+          {viewMode === "openings" && (
+            <AiPressurePanel
+              sector={selectedSectors[0] || "total"}
+              days={aiPressure?.days ?? aiDays}
+              data={aiPressure?.sectors?.[selectedSectors[0] || "total"]}
+            />
+          )}
         </div>
       </main>
 

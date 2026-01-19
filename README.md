@@ -121,7 +121,7 @@ willaireplaceme.org/
 
 ## Data Sources
 
-All data is sourced from the U.S. Bureau of Labor Statistics:
+All data is sourced from the U.S. Bureau of Labor Statistics. An optional “AI skill mentions” signal uses recent federal job postings from [USAJOBS](https://www.usajobs.gov/).
 
 | Series ID | Description |
 |-----------|-------------|
@@ -217,6 +217,8 @@ crons.monthly(
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `NEXT_PUBLIC_CONVEX_URL` | Yes | Your Convex deployment URL |
+| `USAJOBS_AUTH_KEY` | Optional | USAJOBS API key for live “AI skill mentions” metric (federal postings). |
+| `USAJOBS_USER_AGENT` | Optional | Email/identifier required by USAJOBS API (sent as `User-Agent`). |
 
 ## Architecture Highlights
 

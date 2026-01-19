@@ -13,6 +13,10 @@ interface DashboardSectorFiltersProps {
   onUnemploymentSectorToggle: (sector: string) => void;
   selectedParticipationSectors: string[];
   onParticipationSectorToggle: (sector: string) => void;
+  aiPressureBySector?: Record<
+    string,
+    { aiShare: number | null; total: number; note?: string; error?: string }
+  >;
 }
 
 export function DashboardSectorFilters({
@@ -25,6 +29,7 @@ export function DashboardSectorFilters({
   onUnemploymentSectorToggle,
   selectedParticipationSectors,
   onParticipationSectorToggle,
+  aiPressureBySector,
 }: DashboardSectorFiltersProps) {
   return (
     <>
@@ -35,6 +40,7 @@ export function DashboardSectorFilters({
             selectedSectors={selectedSectors}
             onToggle={onSectorToggle}
             accentColor="#ef4444"
+            aiPressureBySector={aiPressureBySector}
           />
         </section>
       )}

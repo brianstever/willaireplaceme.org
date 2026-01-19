@@ -10,4 +10,11 @@ crons.monthly(
   internal.blsFetch.fetchLatestData
 );
 
+// Daily historical backfill (idempotent upsert) to ensure any late revisions are reflected.
+crons.daily(
+  "fetch-bls-historical",
+  { hourUTC: 6, minuteUTC: 10 },
+  internal.blsFetch.fetchHistoricalData
+);
+
 export default crons;
