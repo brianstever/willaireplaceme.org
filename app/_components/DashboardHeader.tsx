@@ -16,17 +16,17 @@ export function DashboardHeader({ lastUpdated }: DashboardHeaderProps) {
             <span className="hidden sm:inline lg:hidden text-muted-foreground font-normal">JOLTS</span>
           </h1>
         </div>
-        <div className="flex items-center gap-4 text-[10px] text-muted-foreground font-mono tracking-wider">
+        <div className="flex items-center gap-3 text-[10px] text-muted-foreground font-mono tracking-wider">
+          {lastUpdated && (
+            <span className="hidden sm:inline opacity-60">Last Updated: {lastUpdated.toUpperCase()}</span>
+          )}
+          <span className="hidden sm:inline opacity-40">|</span>
           <Link 
             href="/about" 
-            className="sm:hidden text-xs hover:text-accent transition-colors"
+            className="text-xs hover:text-accent transition-colors"
           >
             About
           </Link>
-          <span className="hidden sm:inline">BLS DATA</span>
-          {lastUpdated && (
-            <span className="hidden sm:inline opacity-60">{lastUpdated.toUpperCase()}</span>
-          )}
         </div>
       </div>
     </header>

@@ -137,7 +137,72 @@ export default function AboutPage() {
             </div>
           </AboutSection>
 
-          <AboutSection number="05" title="Technical Implementation">
+          <AboutSection number="05" title="Why USAJOBS AI Signal?">
+            <p>
+              Contributed by{" "}
+              <a
+                href="https://github.com/grandSpecial"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent hover:underline"
+              >
+                @grandSpecial
+              </a>
+              , this feature pulls live federal job postings from{" "}
+              <a
+                href="https://www.usajobs.gov/"
+                target="_blank"
+                rel="noreferrer"
+                className="text-accent hover:underline"
+              >
+                USAJOBS.gov
+              </a>{" "}
+              and scans them for AI-related skills. It answers a question central to this 
+              project: <em className="text-foreground">how is AI changing the job market?</em>
+            </p>
+            <p>
+              While JOLTS data shows us aggregate trends in job openings, it doesn&apos;t tell us 
+              what skills employers are actually looking for. By scanning federal job postings 
+              for keywords like &quot;machine learning,&quot; &quot;LLM,&quot; &quot;prompt engineering,&quot; 
+              and other AI-related terms, we can see in real-time how AI skills are becoming 
+              embedded in workforce requirements.
+            </p>
+            <p>
+              The significance goes beyond just &quot;AI jobs.&quot; When employers add AI skills to 
+              existing roles, they&apos;re betting that AI-augmented workers will be more productive—
+              potentially reducing the need for additional hiring. A single employee who can 
+              leverage AI tools effectively might do the work that previously required two or three. 
+              This is the productivity story that could reshape labor demand even as job openings 
+              appear stable.
+            </p>
+            <div className="bg-card/30 border border-card-border rounded p-4 space-y-3">
+              <h3 className="font-mono text-xs text-accent">WHY FEDERAL JOBS?</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Federal job postings are publicly accessible via the USAJOBS API and provide 
+                a consistent, structured dataset. While they represent only a slice of the 
+                overall labor market, federal hiring often reflects broader workforce trends 
+                and policy priorities. When the government starts requiring AI skills for 
+                positions that previously didn&apos;t need them, it signals a fundamental shift 
+                in what &quot;job readiness&quot; means.
+              </p>
+            </div>
+            <div className="bg-card/30 border border-card-border rounded p-4 space-y-3">
+              <h3 className="font-mono text-xs text-accent">LIMITATIONS</h3>
+              <ul className="text-xs text-muted-foreground leading-relaxed space-y-1">
+                <li>• Federal jobs only — private sector not included</li>
+                <li>• Keyword-based detection may miss some relevant postings</li>
+                <li>• Sample sizes vary by sector (some sectors have few federal jobs)</li>
+                <li>• Refreshed periodically, not real-time</li>
+              </ul>
+            </div>
+            <p className="text-xs">
+              This feature is experimental and meant to provide directional insight rather 
+              than precise measurement. Think of it as one more signal in understanding 
+              how AI is reshaping the workforce.
+            </p>
+          </AboutSection>
+
+          <AboutSection number="06" title="Technical Implementation">
             <p>
               Built with modern web technologies to deliver real-time data updates 
               without manual page refreshes:
@@ -148,6 +213,46 @@ export default function AboutPage() {
               enabling instant UI updates when new BLS releases become available.
             </p>
           </AboutSection>
+
+          {/* Contributors */}
+          <section className="space-y-4 pt-6 border-t border-card-border">
+            <h2 className="font-mono text-xs text-muted-foreground tracking-wider">CONTRIBUTORS</h2>
+            <ul className="text-xs text-muted-foreground leading-relaxed space-y-2">
+              <li>
+                <a
+                  href="https://github.com/grandSpecial"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent hover:underline"
+                >
+                  @grandSpecial
+                </a>
+                {" — "}USAJOBS AI skill mentions feature
+              </li>
+              <li>
+                <a
+                  href="https://x.com/igorzmitrovich"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent hover:underline"
+                >
+                  @igorzmitrovich
+                </a>
+                {" — "}suggested the ChatGPT release date marker
+              </li>
+              <li>
+                <a
+                  href="https://x.com/DaveShapi"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent hover:underline"
+                >
+                  @DaveShapi
+                </a>
+                {" — "}requested the labor force participation rate view
+              </li>
+            </ul>
+          </section>
 
           {/* Disclaimer */}
           <section className="space-y-4 pt-6 border-t border-card-border">

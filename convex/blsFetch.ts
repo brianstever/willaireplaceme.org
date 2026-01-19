@@ -108,7 +108,9 @@ export const fetchLatestData = internalAction({
   },
 });
 
-// One-time historical backfill (2015-present)
+// Historical backfill (2015-present).
+// Safe to run repeatedly: this implementation upserts points rather than
+// clearing/reinserting the entire table.
 export const fetchHistoricalData = internalAction({
   args: {},
   handler: async (ctx) => {
@@ -182,13 +184,11 @@ export const fetchHistoricalData = internalAction({
     console.log(`Fetched ${allData.length} data points`);
 
     if (allData.length > 0) {
-      await ctx.runMutation(internal.jobMutations.clearAllData, {});
-
-      // batch inserts to avoid timeout
+      // Upsert in batches to avoid timeouts while keeping the operation idempotent.
       const batchSize = 100;
       for (let i = 0; i < allData.length; i += batchSize) {
         const batch = allData.slice(i, i + batchSize);
-        await ctx.runMutation(internal.jobMutations.insertBatch, { data: batch });
+        await ctx.runMutation(internal.jobMutations.storeData, { data: batch });
       }
 
       await ctx.runMutation(internal.jobMutations.updateMetadata, {

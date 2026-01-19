@@ -12,6 +12,9 @@ import type * as blsFetch from "../blsFetch.js";
 import type * as crons from "../crons.js";
 import type * as jobMutations from "../jobMutations.js";
 import type * as jobs from "../jobs.js";
+import type * as usajobsFetch from "../usajobsFetch.js";
+import type * as usajobsMutations from "../usajobsMutations.js";
+import type * as usajobsQueries from "../usajobsQueries.js";
 
 import type {
   ApiFromModules,
@@ -24,6 +27,9 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   jobMutations: typeof jobMutations;
   jobs: typeof jobs;
+  usajobsFetch: typeof usajobsFetch;
+  usajobsMutations: typeof usajobsMutations;
+  usajobsQueries: typeof usajobsQueries;
 }>;
 
 /**

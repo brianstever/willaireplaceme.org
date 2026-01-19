@@ -15,15 +15,13 @@ export function AboutHeader() {
             <span className="hidden sm:inline lg:hidden text-muted-foreground font-normal">JOLTS</span>
           </h1>
         </Link>
-        <div className="flex items-center gap-4 text-[10px] text-muted-foreground font-mono tracking-wider">
-          <Link 
-            href="/"
-            className="sm:hidden text-xs hover:text-accent transition-colors"
-          >
-            ← Back
-          </Link>
+        <Link 
+          href="/"
+          className="text-[10px] text-muted-foreground font-mono tracking-wider hover:text-accent transition-colors"
+        >
+          <span className="sm:hidden text-xs">← Back</span>
           <span className="hidden sm:inline">← DASHBOARD</span>
-        </div>
+        </Link>
       </div>
     </header>
   );

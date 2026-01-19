@@ -20,6 +20,7 @@ As AI transforms the labor market (and my career prospects), this dashboard prov
 - **Multi-Sector Analysis**: Compare job openings across manufacturing, healthcare, retail, tech, and more
 - **Interactive Charts**: Time range filtering (1Y, 3Y, 5Y, 10Y, ALL) with trendline visualization
 - **Three Data Views**: Toggle between job openings, unemployment rate, and labor force participation rate
+- **USAJOBS AI Skills Signal**: Daily snapshots of federal job postings mentioning AI-related keywords, showing what % of jobs require AI skills by sector (contributed by [@grandSpecial](https://github.com/grandSpecial))
 - **ChatGPT Release Date Marker**: Vertical reference line at November 2022—notably the local maximum before the decline (coincidence?)
 - **Auto-Generated Insights**: Dynamic analysis including peak comparisons and sector trends
 - **Loading Skeletons**: Professional loading states with animated placeholders
@@ -39,7 +40,8 @@ As AI transforms the labor market (and my career prospects), this dashboard prov
 | [Vitest](https://vitest.dev/) | Unit & component testing |
 | [Testing Library](https://testing-library.com/) | React component testing |
 | [Vercel Analytics](https://vercel.com/analytics) | Privacy-friendly analytics |
-| [BLS API](https://www.bls.gov/developers/) | Official data source |
+| [BLS API](https://www.bls.gov/developers/) | Official labor statistics |
+| [USAJOBS API](https://developer.usajobs.gov/) | Federal job postings for AI skills signal |
 
 ## Getting Started
 
@@ -105,17 +107,21 @@ willaireplaceme.org/
 │   ├── jobs.ts            # Query functions
 │   ├── crons.ts           # Scheduled data fetching
 │   ├── blsFetch.ts        # BLS API integration
+│   ├── usajobsFetch.ts    # USAJOBS API integration
+│   ├── usajobsQueries.ts  # AI skill snapshot queries
 │   └── ...mutations       # Data mutation functions
 ├── lib/                   # Shared utilities
 │   ├── bls.ts             # BLS series IDs, labels & colors
 │   ├── chart-utils.ts     # Chart helper functions
-│   └── useChartData.ts    # Custom hooks for chart data
+│   ├── useChartData.ts    # Custom hooks for chart data
+│   ├── usajobs.ts         # USAJOBS API client
+│   └── ai-keywords.ts     # AI skill keywords for matching
 └── public/                # Static assets
 ```
 
 ## Data Sources
 
-All data is sourced from the U.S. Bureau of Labor Statistics:
+All data is sourced from the U.S. Bureau of Labor Statistics. An optional “AI skill mentions” signal uses recent federal job postings from [USAJOBS](https://www.usajobs.gov/).
 
 | Series ID | Description |
 |-----------|-------------|
@@ -198,7 +204,7 @@ This dashboard follows WCAG 2.1 guidelines:
 
 ### Convex Cron Schedule
 
-The data fetch is scheduled for the 7th of each month at 2:00 PM UTC to ensure both JOLTS and unemployment data are available:
+BLS data is fetched monthly on the 7th at 2:00 PM UTC to ensure both JOLTS and unemployment data are available. USAJOBS AI skill data is fetched daily at 8:00 AM UTC:
 
 ```typescript
 // convex/crons.ts
@@ -207,6 +213,12 @@ crons.monthly(
   { day: 7, hourUTC: 14, minuteUTC: 0 },
   internal.blsFetch.fetchLatestData
 );
+
+crons.daily(
+  "fetch-usajobs-ai-data",
+  { hourUTC: 8, minuteUTC: 0 },
+  internal.usajobsFetch.fetchAiSkillSnapshot
+);
 ```
 
 ### Environment Variables
@@ -214,6 +226,8 @@ crons.monthly(
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `NEXT_PUBLIC_CONVEX_URL` | Yes | Your Convex deployment URL |
+| `USAJOBS_AUTH_KEY` | Optional | USAJOBS API key for live “AI skill mentions” metric (federal postings). |
+| `USAJOBS_USER_AGENT` | Optional | Email/identifier required by USAJOBS API (sent as `User-Agent`). |
 
 ## Architecture Highlights
 
@@ -273,4 +287,7 @@ Probably not. But until superintelligence arrives to optimize away my React comp
 - [Bureau of Labor Statistics](https://www.bls.gov/) for providing public data APIs
 - [Convex](https://convex.dev/) for the real-time backend infrastructure
 - [Recharts](https://recharts.org/) for the charting library
+- [@grandSpecial](https://github.com/grandSpecial) for the USAJOBS AI skill mentions feature
+- [@igorzmitrovich](https://x.com/igorzmitrovich) for suggesting the ChatGPT release date marker
+- [@DaveShapi](https://x.com/DaveShapi) for requesting the labor force participation rate view
 - The inevitable march of progress, for giving this project its name

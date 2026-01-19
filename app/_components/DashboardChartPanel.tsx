@@ -61,7 +61,7 @@ export function DashboardChartPanel({
     <section
       id="chart-panel"
       role="tabpanel"
-      className="flex-1 min-h-0 flex flex-col"
+      className="h-[550px] md:h-[600px] flex flex-col"
       aria-label="Data visualization"
     >
       <ChartErrorBoundary chartName={chartName}>

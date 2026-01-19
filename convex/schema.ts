@@ -12,6 +12,28 @@ export default defineSchema({
     .index("by_date", ["date"])
     .index("by_sector_date", ["sector", "date"]),
 
+  // USAJOBS AI skill snapshots - daily snapshots of AI skill mentions in federal job postings
+  ai_skill_snapshots: defineTable({
+    date: v.string(),        // "2026-01-19"
+    sector: v.string(),      // "total", "information", "healthcare", etc.
+    total: v.number(),       // total postings sampled
+    aiCount: v.number(),     // postings mentioning AI skills
+    aiShare: v.union(v.number(), v.null()), // percentage (0-1) or null if low sample
+    topKeywords: v.array(v.object({
+      keyword: v.string(),
+      count: v.number(),
+    })),
+    examples: v.array(v.object({
+      title: v.string(),
+      agency: v.optional(v.string()),
+      url: v.optional(v.string()),
+      matchedKeywords: v.array(v.string()),
+    })),
+  })
+    .index("by_sector", ["sector"])
+    .index("by_date", ["date"])
+    .index("by_sector_date", ["sector", "date"]),
+
   metadata: defineTable({
     key: v.string(),
     value: v.string(),
