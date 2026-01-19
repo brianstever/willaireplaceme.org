@@ -1,6 +1,8 @@
-# JOLTS Dashboard
+# willaireplacemyjob.org
 
 An interactive real-time visualization of U.S. labor market data from the Bureau of Labor Statistics' Job Openings and Labor Turnover Survey (JOLTS).
+
+🌐 **Live at [willaireplacemyjob.org](https://willaireplacemyjob.org)**
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
@@ -49,8 +51,8 @@ This dashboard provides real-time tracking of U.S. job openings across multiple 
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/job-data.git
-   cd job-data
+   git clone https://github.com/brianstever/willaireplacemyjob.org.git
+   cd willaireplacemyjob.org
    ```
 
 2. **Install dependencies**
@@ -85,7 +87,7 @@ This dashboard provides real-time tracking of U.S. job openings across multiple 
 ## Project Structure
 
 ```
-job-data/
+willaireplacemyjob.org/
 ├── app/                    # Next.js App Router pages
 │   ├── page.tsx           # Main dashboard
 │   ├── about/             # About page
