@@ -2,64 +2,62 @@
 
 export function ChartSkeleton() {
   return (
-    <div className="space-y-2 flex flex-col h-full animate-pulse">
-      {/* Controls skeleton */}
-      <div className="flex items-center justify-between flex-wrap gap-2 shrink-0">
-        <div className="flex items-center gap-1 bg-secondary/20 p-0.5 rounded">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="w-8 h-5 bg-card-border/30 rounded-sm" />
+    <div className="space-y-2 flex flex-col h-full">
+      {/* Controls skeleton - matches ChartControls layout */}
+      <div className="flex items-center justify-between flex-wrap gap-2 shrink-0 animate-pulse">
+        {/* Time range buttons */}
+        <div className="flex items-center bg-secondary/20 p-0.5 rounded">
+          {["1Y", "3Y", "5Y", "10Y", "ALL"].map((label, i) => (
+            <div 
+              key={label} 
+              className={`px-2 py-0.5 text-[10px] rounded-sm ${i === 1 ? "bg-background/50" : ""}`}
+            >
+              <span className="opacity-30">{label}</span>
+            </div>
           ))}
         </div>
+
+        {/* Right controls */}
         <div className="flex items-center gap-2">
-          <div className="w-16 h-5 bg-card-border/30 rounded" />
-          <div className="w-12 h-5 bg-card-border/30 rounded" />
-          <div className="w-24 h-4 bg-card-border/20 rounded hidden sm:block" />
+          {/* Trend toggle */}
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] bg-secondary/30 border border-white/10">
+            <div className="w-6 h-0.5 bg-card-border/40 rounded" />
+            <span className="opacity-30">Trend</span>
+          </div>
+          {/* Trend indicator */}
+          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded border border-card-border/20 bg-card-border/10">
+            <div className="w-2 h-2 bg-card-border/30 rounded-sm" />
+            <div className="w-8 h-3 bg-card-border/30 rounded" />
+          </div>
+          {/* Date range */}
+          <div className="w-28 h-3 bg-card-border/20 rounded hidden sm:block" />
         </div>
       </div>
 
-      {/* Chart skeleton */}
-      <div className="rounded-lg overflow-hidden bg-linear-to-b from-black/20 to-black/40 border border-white/5 flex-1 min-h-0 relative">
-        {/* Y-axis labels */}
-        <div className="absolute left-2 top-4 bottom-8 flex flex-col justify-between">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="w-6 h-2 bg-card-border/20 rounded" />
-          ))}
-        </div>
+      {/* Chart container with animated shimmer */}
+      <div className="rounded-lg overflow-hidden bg-gradient-to-b from-black/20 to-black/40 border border-white/5 flex-1 min-h-0 relative">
+        {/* Animated shimmer overlay */}
+        <div 
+          className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite]"
+          style={{
+            background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.03) 50%, transparent 100%)",
+          }}
+        />
         
-        {/* Grid lines */}
-        <div className="absolute left-10 right-4 top-4 bottom-8 flex flex-col justify-between">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-px bg-card-border/10 w-full" />
-          ))}
-        </div>
-        
-        {/* Fake chart area */}
-        <div className="absolute left-10 right-4 top-8 bottom-12">
-          <svg viewBox="0 0 100 40" className="w-full h-full" preserveAspectRatio="none">
-            <path
-              d="M0,30 Q10,28 20,25 T40,20 T60,22 T80,18 T100,15"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="0.5"
-              className="text-card-border/30"
-            />
-            <path
-              d="M0,30 Q10,28 20,25 T40,20 T60,22 T80,18 T100,15 L100,40 L0,40 Z"
-              className="fill-card-border/10"
-            />
-          </svg>
-        </div>
-        
-        {/* X-axis labels */}
-        <div className="absolute left-10 right-4 bottom-2 flex justify-between">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="w-6 h-2 bg-card-border/20 rounded" />
-          ))}
-        </div>
-        
-        {/* Brush skeleton */}
-        <div className="absolute left-10 right-4 bottom-6 h-5 bg-card-border/10 rounded" />
+        {/* Subtle glass texture */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent" />
       </div>
+
+      <style jsx>{`
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+      `}</style>
     </div>
   );
 }

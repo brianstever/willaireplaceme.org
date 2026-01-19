@@ -42,7 +42,8 @@ describe("SECTOR_LABELS", () => {
   });
 
   it("has label for unemployment_rate", () => {
-    expect(SECTOR_LABELS.unemployment_rate).toBe("UNEMPLOYMENT RATE");
+    // unemployment_rate serves as "ALL INDUSTRIES" in unemployment industry filter
+    expect(SECTOR_LABELS.unemployment_rate).toBe("ALL INDUSTRIES");
   });
 
   it("labels are uppercase", () => {

@@ -1,6 +1,32 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
+const JOB_OPENING_SECTORS = [
+  "total",
+  "manufacturing",
+  "healthcare",
+  "retail",
+  "professional",
+  "information",
+  "government",
+];
+
+// Industry unemployment sectors for filtering
+// Note: unemployment_rate serves as the "total" unemployment
+const UNEMPLOYMENT_SECTORS = [
+  "unemployment_rate",
+  "unemployment_manufacturing",
+  "unemployment_healthcare",
+  "unemployment_retail",
+  "unemployment_professional",
+  "unemployment_information",
+  "unemployment_government",
+];
+
+const ALL_SECTORS = Array.from(
+  new Set([...JOB_OPENING_SECTORS, "participation_rate", ...UNEMPLOYMENT_SECTORS])
+);
+
 // --- Queries ---
 
 export const getJobOpenings = query({
@@ -21,12 +47,12 @@ export const getJobOpenings = query({
       data = await ctx.db.query("job_openings").collect();
     }
 
-    if (args.startDate || args.endDate) {
-      data = data.filter((d) => {
-        if (args.startDate && d.date < args.startDate) return false;
-        if (args.endDate && d.date > args.endDate) return false;
-        return true;
-      });
+    // filter by date range in memory
+    if (args.startDate) {
+      data = data.filter((d) => d.date >= args.startDate!);
+    }
+    if (args.endDate) {
+      data = data.filter((d) => d.date <= args.endDate!);
     }
 
     return data.sort((a, b) => a.date.localeCompare(b.date));
@@ -36,20 +62,21 @@ export const getJobOpenings = query({
 export const getLatestBySector = query({
   args: {},
   handler: async (ctx) => {
-    const allData = await ctx.db.query("job_openings").collect();
+    const results = await Promise.all(
+      ALL_SECTORS.map(async (sector) => {
+        const data = await ctx.db
+          .query("job_openings")
+          .withIndex("by_sector", (q) => q.eq("sector", sector))
+          .collect();
 
-    const latestBySector: Record<
-      string,
-      { date: string; sector: string; value: number; rate?: number }
-    > = {};
+        if (data.length === 0) return null;
+        return data.reduce((latest, item) =>
+          item.date > latest.date ? item : latest
+        );
+      })
+    );
 
-    for (const item of allData) {
-      if (!latestBySector[item.sector] || item.date > latestBySector[item.sector].date) {
-        latestBySector[item.sector] = item;
-      }
-    }
-
-    return Object.values(latestBySector);
+    return results.filter((item) => item !== null);
   },
 });
 
@@ -68,9 +95,8 @@ export const getPeakValue = query({
 
 export const getSectors = query({
   args: {},
-  handler: async (ctx) => {
-    const allData = await ctx.db.query("job_openings").collect();
-    return [...new Set(allData.map((d) => d.sector))].sort();
+  handler: async () => {
+    return [...ALL_SECTORS].sort();
   },
 });
 
@@ -126,11 +152,85 @@ export const getUnemploymentRate = query({
   },
 });
 
+export const getParticipationRate = query({
+  args: {},
+  handler: async (ctx) => {
+    const data = await ctx.db
+      .query("job_openings")
+      .withIndex("by_sector", (q) => q.eq("sector", "participation_rate"))
+      .collect();
+    
+    if (data.length === 0) return null;
+    
+    const sorted = data.sort((a, b) => a.date.localeCompare(b.date));
+    const latest = sorted[sorted.length - 1];
+    
+    // last 12 months for header sparkline
+    const sparkline = sorted.slice(-12);
+    const history = sorted.map(d => ({ date: d.date, value: d.value }));
+    
+    // find year-ago value for YoY comparison
+    const yearAgo = sorted.find(d => {
+      const latestDate = new Date(latest.date + "-01");
+      const compareDate = new Date(d.date + "-01");
+      const diffMonths = (latestDate.getFullYear() - compareDate.getFullYear()) * 12 + 
+                         (latestDate.getMonth() - compareDate.getMonth());
+      return diffMonths === 12;
+    });
+    
+    const peak = sorted.reduce((max, d) => d.value > max.value ? d : max, sorted[0]);
+    const lowest = sorted.reduce((min, d) => d.value < min.value ? d : min, sorted[0]);
+    
+    return {
+      current: latest.value,
+      date: latest.date,
+      yearAgoValue: yearAgo?.value || null,
+      changeFromYearAgo: yearAgo ? latest.value - yearAgo.value : null,
+      sparkline: sparkline.map(d => ({ date: d.date, value: d.value })),
+      history,
+      peak: { value: peak.value, date: peak.date },
+      lowest: { value: lowest.value, date: lowest.date },
+    };
+  },
+});
+
+export const getUnemploymentByIndustry = query({
+  args: {},
+  handler: async (ctx) => {
+    const sectorResults = await Promise.all(
+      UNEMPLOYMENT_SECTORS.map((sector) =>
+        ctx.db
+          .query("job_openings")
+          .withIndex("by_sector", (q) => q.eq("sector", sector))
+          .collect()
+      )
+    );
+
+    return sectorResults
+      .flat()
+      .sort((a, b) => a.date.localeCompare(b.date));
+  },
+});
+
+export const getUnemploymentSectors = query({
+  args: {},
+  handler: async () => {
+    return [...UNEMPLOYMENT_SECTORS];
+  },
+});
+
 export const getDataAnalysis = query({
   args: {},
   handler: async (ctx) => {
-    const allData = await ctx.db.query("job_openings").collect();
-    const jobData = allData.filter(d => d.sector !== "unemployment_rate");
+    const sectorResults = await Promise.all(
+      JOB_OPENING_SECTORS.map((sector) =>
+        ctx.db
+          .query("job_openings")
+          .withIndex("by_sector", (q) => q.eq("sector", sector))
+          .collect()
+      )
+    );
+    const jobData = sectorResults.flat();
     
     if (jobData.length === 0) return null;
 
@@ -189,8 +289,9 @@ export const getDataAnalysis = query({
         ? ((latest.value - prePandemic.value) / prePandemic.value) * 100 
         : null,
       sectorChanges,
-      steepestDecline: sectorChanges[0],
-      mostResilient: sectorChanges[sectorChanges.length - 1],
+      // guard for empty arrays when only "total" data exists
+      steepestDecline: sectorChanges.length > 0 ? sectorChanges[0] : null,
+      mostResilient: sectorChanges.length > 0 ? sectorChanges[sectorChanges.length - 1] : null,
     };
   },
 });

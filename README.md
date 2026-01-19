@@ -1,25 +1,25 @@
 # Will AI Replace Me?
 
-Track job losses and labor market shifts in the age of AI. An interactive dashboard visualizing U.S. employment data to help understand how automation and AI are reshaping the workforce.
+Track job losses and labor market shifts in the age of AI—while we still have jobs to track. An interactive dashboard visualizing U.S. employment data to help understand how automation and AI are reshaping the workforce.
 
-🌐 **Live at [willaireplaceme.org](https://willaireplaceme.org)**
+**Live at [willaireplaceme.org](https://willaireplaceme.org)**
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
 ![Convex](https://img.shields.io/badge/Convex-Backend-orange)
-![Tests](https://img.shields.io/badge/Tests-102%20passing-brightgreen)
+[![CI](https://github.com/brianstever/willaireplaceme.org/actions/workflows/ci.yml/badge.svg)](https://github.com/brianstever/willaireplaceme.org/actions/workflows/ci.yml)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 ## Overview
 
-As AI transforms the labor market, this dashboard provides real-time tracking of U.S. job openings across multiple sectors, along with national unemployment rate data. See which industries are growing, which are shrinking, and how the job landscape is evolving. Data is automatically fetched from the BLS public API and stored using Convex for instant reactive updates.
+As AI transforms the labor market (and my career prospects), this dashboard provides real-time tracking of U.S. job openings across multiple sectors, along with national unemployment rate and labor force participation rate data. See which industries are growing, which are shrinking, and how the job landscape is evolving. Data is automatically fetched from the BLS public API and stored using Convex for instant reactive updates.
 
 ### Features
 
 - **Real-time Data**: Automatic monthly updates via Convex cron jobs
 - **Multi-Sector Analysis**: Compare job openings across manufacturing, healthcare, retail, tech, and more
 - **Interactive Charts**: Time range filtering (1Y, 3Y, 5Y, 10Y, ALL) with trendline visualization
-- **Dual Views**: Toggle between job openings and unemployment rate perspectives
+- **Three Data Views**: Toggle between job openings, unemployment rate, and labor force participation rate
 - **Auto-Generated Insights**: Dynamic analysis including peak comparisons and sector trends
 - **Loading Skeletons**: Professional loading states with animated placeholders
 - **Responsive Design**: Modern dark theme optimized for all screen sizes
@@ -65,25 +65,19 @@ As AI transforms the labor market, this dashboard provides real-time tracking of
    ```bash
    npx convex dev
    ```
-   This will prompt you to log in and create a new project. Follow the instructions to set up your Convex backend.
+   This will prompt you to log in and create a new project. Follow the instructions to link your Convex backend. Once linked, you can stop this command (Ctrl+C).
 
-4. **Configure environment variables**
-   
-   Create a `.env.local` file in the root directory:
-   ```env
-   NEXT_PUBLIC_CONVEX_URL=your_convex_deployment_url
-   ```
-
-5. **Seed initial data**
-   
-   Run the data fetch action from the Convex dashboard or via CLI to populate initial BLS data.
-
-6. **Start the development server**
+4. **Start the development server**
    ```bash
    npm run dev
    ```
+   This starts both Next.js and Convex dev servers together.
 
-7. Open [http://localhost:3000](http://localhost:3000) in your browser.
+5. **Seed initial data** (first time only)
+   
+   Run the data fetch action from the Convex dashboard or via CLI to populate initial BLS data.
+
+6. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Project Structure
 
@@ -94,13 +88,14 @@ willaireplaceme.org/
 │   ├── about/             # About page
 │   ├── layout.tsx         # Root layout
 │   └── globals.css        # Global styles
-├── __tests__/             # Test files (102 tests)
+├── __tests__/             # Test files
 │   ├── lib/               # Utility function tests
 │   ├── components/        # Component tests
 │   └── integration/       # Page integration tests
-├── components/            # React components (12 total)
+├── components/            # React components
 │   ├── JobChart.tsx       # Job openings chart
 │   ├── UnemploymentChart.tsx  # Unemployment rate chart
+│   ├── ParticipationChart.tsx # Labor force participation rate chart
 │   ├── ChartControls.tsx  # Shared chart controls
 │   ├── ChartTooltip.tsx   # Shared tooltip components
 │   ├── ChartSkeleton.tsx  # Loading skeleton for charts
@@ -138,23 +133,25 @@ All data is sourced from the U.S. Bureau of Labor Statistics:
 | `JTS510000000000000JOL` | Information |
 | `JTS900000000000000JOL` | Government |
 | `LNS14000000` | National Unemployment Rate |
+| `LNS11300000` | Labor Force Participation Rate |
 
 Data is released monthly by BLS:
 - **JOLTS**: First Tuesday of each month (~2 month lag)
-- **Employment Situation**: First Friday of each month
+- **Employment Situation** (unemployment & participation): First Friday of each month
 
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start development server |
+| `npm run dev` | Start Next.js + Convex dev servers together |
+| `npm run dev:next` | Start Next.js only |
+| `npm run dev:convex` | Start Convex dev server only |
 | `npm run build` | Build for production |
 | `npm run start` | Start production server |
 | `npm run lint` | Run ESLint |
 | `npm run test` | Run tests in watch mode |
 | `npm run test:run` | Run tests once |
 | `npm run test:coverage` | Run tests with coverage report |
-| `npx convex dev` | Start Convex development |
 | `npx convex deploy` | Deploy Convex to production |
 
 ## Testing
@@ -176,12 +173,11 @@ npm run test:coverage
 
 ### Test Coverage
 
-| Category | Tests | Files |
+| Category | Focus | Files |
 |----------|-------|-------|
-| Utility Functions | 54 | `bls.test.ts`, `chart-utils.test.ts`, `useChartData.test.ts` |
-| Components | 34 | `AnimatedCounter.test.tsx`, `SectorFilter.test.tsx`, `ChartControls.test.tsx` |
-| Integration | 14 | `page.test.tsx` |
-| **Total** | **102** | **7 test files** |
+| Utility Functions | Core data utilities | `bls.test.ts`, `chart-utils.test.ts`, `useChartData.test.ts` |
+| Components | UI behavior | `AnimatedCounter.test.tsx`, `SectorFilter.test.tsx`, `ChartControls.test.tsx` |
+| Integration | Page flows | `page.test.tsx` |
 
 ### Writing Tests
 
@@ -229,7 +225,7 @@ crons.monthly(
 The codebase follows DRY principles with shared infrastructure:
 
 - **`useChartData.ts`**: Custom hooks for chart data processing
-  - `useSimpleChartData` - Single-value series (unemployment)
+  - `useSimpleChartData` - Single-value series (unemployment, participation rate)
   - `useMultiSeriesChartData` - Multi-sector series (job openings)
   
 - **`ChartControls.tsx`**: Shared time range and trendline controls
@@ -258,10 +254,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Disclaimer
 
-This dashboard is provided for educational and informational purposes only. While data is sourced directly from the Bureau of Labor Statistics, this is not an official BLS product. Always refer to [official BLS releases](https://www.bls.gov/jlt/) for authoritative data.
+This dashboard is provided for educational and informational purposes only—and mild existential dread. Not responsible for any anxiety induced by p(doom) calculations or sudden AGI emergence. While data is sourced directly from the Bureau of Labor Statistics, this is not an official BLS product. Always refer to [official BLS releases](https://www.bls.gov/jlt/) for authoritative data.
+
+## Will This Dashboard Survive AGI?
+
+Probably not. But until superintelligence arrives to optimize away my React components, I'll keep the charts updated.
 
 ## Acknowledgments
 
 - [Bureau of Labor Statistics](https://www.bls.gov/) for providing public data APIs
 - [Convex](https://convex.dev/) for the real-time backend infrastructure
 - [Recharts](https://recharts.org/) for the charting library
+- The inevitable march of progress, for giving this project its name

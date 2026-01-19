@@ -11,26 +11,59 @@ import {
   ResponsiveContainer,
   Brush,
 } from "recharts";
-import { useSimpleChartData } from "@/lib/useChartData";
+import { SECTOR_LABELS, SECTOR_COLORS } from "@/lib/bls";
+import { useSimpleChartData, useMultiSeriesChartData } from "@/lib/useChartData";
 import { ChartControls } from "./ChartControls";
-import { UnemploymentTooltip } from "./ChartTooltip";
+import { UnemploymentTooltip, UnemploymentMultiTooltip } from "./ChartTooltip";
 
 interface DataPoint {
   date: string;
   value: number;
 }
 
+interface MultiDataPoint {
+  date: string;
+  sector: string;
+  value: number;
+}
+
 interface UnemploymentChartProps {
   data: DataPoint[];
+  multiData?: MultiDataPoint[];
+  selectedSectors?: string[];
   selectedRange?: string;
   onRangeChange?: (range: string) => void;
 }
 
+// Map unemployment sector to display label (strip unemployment_ prefix)
+function getUnemploymentLabel(sector: string): string {
+  return SECTOR_LABELS[sector] || sector.replace("unemployment_", "").toUpperCase();
+}
+
 export function UnemploymentChart({
   data,
+  multiData,
+  selectedSectors = ["unemployment_rate"],
   selectedRange: controlledRange,
   onRangeChange,
 }: UnemploymentChartProps) {
+  const isMultiSector = multiData && selectedSectors.length > 0;
+  
+  // Single-sector mode (original behavior)
+  const singleSeriesResult = useSimpleChartData(data, {
+    selectedRange: controlledRange,
+    onRangeChange,
+  });
+
+  // Multi-sector mode
+  const multiSeriesResult = useMultiSeriesChartData(multiData || [], selectedSectors, {
+    selectedRange: controlledRange,
+    onRangeChange,
+    includeUnemploymentRate: true, // unemployment_rate serves as "total" in this view
+    trendUnit: "pp",
+  });
+
+  // Use appropriate result based on mode
   const {
     chartData,
     selectedRange,
@@ -40,10 +73,7 @@ export function UnemploymentChart({
     trendInfo,
     showTrendline,
     setShowTrendline,
-  } = useSimpleChartData(data, {
-    selectedRange: controlledRange,
-    onRangeChange,
-  });
+  } = isMultiSector ? multiSeriesResult : singleSeriesResult;
 
   if (chartData.length === 0) {
     return (
@@ -70,15 +100,24 @@ export function UnemploymentChart({
       <div 
         className="rounded-lg overflow-hidden bg-linear-to-b from-black/20 to-black/40 border border-white/5 flex-1 min-h-0"
         role="img"
-        aria-label={`Unemployment rate chart from ${dateRangeDisplay}`}
+        aria-label={`Unemployment rate chart${isMultiSector ? ` showing ${selectedSectors.map(s => getUnemploymentLabel(s)).join(", ")}` : ""} from ${dateRangeDisplay}`}
       >
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData} margin={{ top: 16, right: 16, left: 0, bottom: 8 }}>
             <defs>
-              <linearGradient id="gradient-unemployment" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#06b6d4" stopOpacity={0.25} />
-                <stop offset="100%" stopColor="#06b6d4" stopOpacity={0.02} />
-              </linearGradient>
+              {isMultiSector ? (
+                selectedSectors.map((sector) => (
+                  <linearGradient key={sector} id={`gradient-${sector}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={SECTOR_COLORS[sector] || "#06b6d4"} stopOpacity={0.25} />
+                    <stop offset="100%" stopColor={SECTOR_COLORS[sector] || "#06b6d4"} stopOpacity={0.02} />
+                  </linearGradient>
+                ))
+              ) : (
+                <linearGradient id="gradient-unemployment" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#06b6d4" stopOpacity={0.25} />
+                  <stop offset="100%" stopColor="#06b6d4" stopOpacity={0.02} />
+                </linearGradient>
+              )}
             </defs>
 
             <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} opacity={0.4} />
@@ -107,34 +146,71 @@ export function UnemploymentChart({
               tickLine={false}
               axisLine={false}
               tickFormatter={(value) => `${value}%`}
-              domain={yAxisDomain}
+              domain={isMultiSector ? yAxisDomain : yAxisDomain}
               width={40}
             />
 
-            <Tooltip content={<UnemploymentTooltip />} cursor={{ stroke: '#555', strokeWidth: 1, strokeDasharray: '4 4' }} />
-
-            <Area
-              type="monotone"
-              dataKey="value"
-              stroke="#06b6d4"
-              strokeWidth={2}
-              fill="url(#gradient-unemployment)"
-              fillOpacity={1}
-              dot={false}
-              activeDot={{ r: 6, fill: "#06b6d4", stroke: "#000", strokeWidth: 2 }}
+            <Tooltip 
+              content={isMultiSector ? <UnemploymentMultiTooltip /> : <UnemploymentTooltip />} 
+              cursor={{ stroke: '#555', strokeWidth: 1, strokeDasharray: '4 4' }} 
             />
 
-            {showTrendline && (
-              <Line
-                type="monotone"
-                dataKey="trend"
-                stroke="#06b6d4"
-                strokeWidth={1.5}
-                strokeDasharray="6 4"
-                strokeOpacity={0.5}
-                dot={false}
-                activeDot={false}
-              />
+            {isMultiSector ? (
+              <>
+                {selectedSectors.map((sector) => (
+                  <Area
+                    key={sector}
+                    type="monotone"
+                    dataKey={sector}
+                    stroke={SECTOR_COLORS[sector] || "#06b6d4"}
+                    strokeWidth={2}
+                    fill={`url(#gradient-${sector})`}
+                    fillOpacity={1}
+                    dot={false}
+                    activeDot={{ r: 6, fill: SECTOR_COLORS[sector] || "#06b6d4", stroke: "#000", strokeWidth: 2 }}
+                  />
+                ))}
+
+                {showTrendline && selectedSectors.map((sector) => (
+                  <Line
+                    key={`${sector}_trend`}
+                    type="monotone"
+                    dataKey={`${sector}_trend`}
+                    stroke={SECTOR_COLORS[sector] || "#06b6d4"}
+                    strokeWidth={1.5}
+                    strokeDasharray="6 4"
+                    strokeOpacity={0.5}
+                    dot={false}
+                    activeDot={false}
+                  />
+                ))}
+              </>
+            ) : (
+              <>
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#06b6d4"
+                  strokeWidth={2}
+                  fill="url(#gradient-unemployment)"
+                  fillOpacity={1}
+                  dot={false}
+                  activeDot={{ r: 6, fill: "#06b6d4", stroke: "#000", strokeWidth: 2 }}
+                />
+
+                {showTrendline && (
+                  <Line
+                    type="monotone"
+                    dataKey="trend"
+                    stroke="#06b6d4"
+                    strokeWidth={1.5}
+                    strokeDasharray="6 4"
+                    strokeOpacity={0.5}
+                    dot={false}
+                    activeDot={false}
+                  />
+                )}
+              </>
             )}
             
             <Brush dataKey="date" height={20} stroke="#333" fill="rgba(0,0,0,0.2)" tickFormatter={() => ""} />
