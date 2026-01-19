@@ -89,10 +89,6 @@ export function JobChart({
         className="rounded-lg overflow-hidden bg-linear-to-b from-black/20 to-black/40 border border-white/5 flex-1 min-h-[300px] outline-none"
         role="img"
         aria-label={`Job openings chart showing ${chartSectors.map(s => SECTOR_LABELS[s] || s).join(", ")} from ${dateRangeDisplay}`}
-        ref={(el) => {
-          // Forward to touchProps ref
-          if (touchProps.ref) (touchProps.ref as React.MutableRefObject<HTMLDivElement | null>).current = el;
-        }}
       >
         {isMounted ? (
           <ResponsiveContainer

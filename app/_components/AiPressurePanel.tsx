@@ -216,7 +216,7 @@ export function AiPressurePanel({ sector, days, data, onClose }: AiPressurePanel
                   href="https://www.usajobs.gov/" 
                   target="_blank" 
                   rel="noreferrer"
-                  className="text-muted-foreground hover:text-foreground hover:underline"
+                  className="text-foreground/70 hover:text-foreground hover:underline"
                   onClick={(e) => e.stopPropagation()}
                 >
                   USAJOBS.gov
@@ -226,7 +226,7 @@ export function AiPressurePanel({ sector, days, data, onClose }: AiPressurePanel
                   href="https://github.com/grandSpecial" 
                   target="_blank" 
                   rel="noreferrer"
-                  className="text-muted-foreground hover:text-foreground hover:underline"
+                  className="text-foreground/70 hover:text-foreground hover:underline"
                   onClick={(e) => e.stopPropagation()}
                 >
                   @grandSpecial
