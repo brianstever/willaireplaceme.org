@@ -1,6 +1,6 @@
-# willaireplaceme.org
+# Will AI Replace Me?
 
-An interactive real-time visualization of U.S. labor market data from the Bureau of Labor Statistics' Job Openings and Labor Turnover Survey (JOLTS).
+Track job losses and labor market shifts in the age of AI. An interactive dashboard visualizing U.S. employment data to help understand how automation and AI are reshaping the workforce.
 
 🌐 **Live at [willaireplaceme.org](https://willaireplaceme.org)**
 
@@ -12,7 +12,7 @@ An interactive real-time visualization of U.S. labor market data from the Bureau
 
 ## Overview
 
-This dashboard provides real-time tracking of U.S. job openings across multiple sectors, along with national unemployment rate data. Data is automatically fetched from the BLS public API and stored using Convex for instant reactive updates.
+As AI transforms the labor market, this dashboard provides real-time tracking of U.S. job openings across multiple sectors, along with national unemployment rate data. See which industries are growing, which are shrinking, and how the job landscape is evolving. Data is automatically fetched from the BLS public API and stored using Convex for instant reactive updates.
 
 ### Features
 
@@ -37,6 +37,7 @@ This dashboard provides real-time tracking of U.S. job openings across multiple 
 | [Tailwind CSS 4](https://tailwindcss.com/) | Styling |
 | [Vitest](https://vitest.dev/) | Unit & component testing |
 | [Testing Library](https://testing-library.com/) | React component testing |
+| [Vercel Analytics](https://vercel.com/analytics) | Privacy-friendly analytics |
 | [BLS API](https://www.bls.gov/developers/) | Official data source |
 
 ## Getting Started
