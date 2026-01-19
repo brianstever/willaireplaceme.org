@@ -48,7 +48,6 @@ export function SectorFilter({
   // Detect view mode based on sectors passed
   const isUnemploymentMode = sectors.some(s => s.startsWith("unemployment_"));
   const isParticipationMode = sectors.includes("participation_rate");
-  const isRateMode = isUnemploymentMode || isParticipationMode;
   
   // Sort: total/unemployment_rate/participation_rate first, then alphabetical
   const sortedSectors = [...sectors]

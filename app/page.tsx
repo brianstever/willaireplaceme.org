@@ -89,7 +89,6 @@ export default function Home() {
 
   // --- USAJOBS AI Skills Data (from Convex) ---
   const aiSkillsData = useQuery(api.usajobsQueries.getLatestAiSkills, {});
-  const aiSkillsLoading = aiSkillsData === undefined;
 
   const jobDataItems = useMemo(
     () => jobData?.filter((item): item is NonNullable<typeof item> => item !== null) ?? [],

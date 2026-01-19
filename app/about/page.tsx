@@ -144,7 +144,7 @@ export default function AboutPage() {
                 href="https://github.com/grandSpecial"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-accent hover:underline"
+                className="text-foreground/70 hover:text-foreground hover:underline"
               >
                 @grandSpecial
               </a>
@@ -153,7 +153,7 @@ export default function AboutPage() {
                 href="https://www.usajobs.gov/"
                 target="_blank"
                 rel="noreferrer"
-                className="text-accent hover:underline"
+                className="text-foreground/70 hover:text-foreground hover:underline"
               >
                 USAJOBS.gov
               </a>{" "}
@@ -223,7 +223,7 @@ export default function AboutPage() {
                   href="https://github.com/grandSpecial"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-accent hover:underline"
+                  className="text-foreground/70 hover:text-foreground hover:underline"
                 >
                   @grandSpecial
                 </a>
@@ -234,7 +234,7 @@ export default function AboutPage() {
                   href="https://x.com/igorzmitrovich"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-accent hover:underline"
+                  className="text-foreground/70 hover:text-foreground hover:underline"
                 >
                   @igorzmitrovich
                 </a>
@@ -245,7 +245,7 @@ export default function AboutPage() {
                   href="https://x.com/DaveShapi"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-accent hover:underline"
+                  className="text-foreground/70 hover:text-foreground hover:underline"
                 >
                   @DaveShapi
                 </a>
@@ -272,7 +272,7 @@ export default function AboutPage() {
                 href="https://github.com/brianstever/willaireplaceme.org"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-accent hover:underline"
+                className="text-foreground/70 hover:text-foreground hover:underline"
               >
                 GitHub
               </a>.
