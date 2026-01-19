@@ -102,13 +102,26 @@ export function AiPressurePanel({ sector, days, data, onClose }: AiPressurePanel
       {/* Collapsed Summary */}
       {data && !data.error && !expanded && (
         <div className="px-3 pb-3 text-[10px] font-mono text-muted-foreground">
-          {data.total} postings sampled · {data.aiCount} mention AI skills · <span className="text-muted-foreground/50">click to expand</span>
+          {data.total} postings sampled · {data.aiCount} mention AI skills · 
+          <span className="text-muted-foreground/50"> click to expand</span>
+          <span className="block mt-1 text-muted-foreground/40">
+            Feature by{" "}
+            <a 
+              href="https://github.com/grandSpecial" 
+              target="_blank" 
+              rel="noreferrer"
+              className="hover:text-foreground"
+              onClick={(e) => e.stopPropagation()}
+            >
+              @grandSpecial
+            </a>
+          </span>
         </div>
       )}
 
       {/* Expanded Content */}
       {data && !data.error && (
-        <div className={`overflow-hidden transition-all duration-200 ${expanded ? "max-h-[600px]" : "max-h-0"}`}>
+        <div className={`overflow-hidden transition-all duration-200 ${expanded ? "max-h-[800px]" : "max-h-0"}`}>
           <div className="px-3 pb-3 space-y-3 border-t border-card-border/30 pt-3">
             {/* Stats Row */}
             <div className="grid grid-cols-3 gap-3 text-center">
@@ -152,9 +165,11 @@ export function AiPressurePanel({ sector, days, data, onClose }: AiPressurePanel
             {/* Example Jobs */}
             {data.examples.length > 0 && (
               <div>
-                <div className="text-[10px] font-mono text-muted-foreground mb-2">EXAMPLE POSTINGS</div>
+                <div className="text-[10px] font-mono text-muted-foreground mb-2">
+                  SAMPLE POSTINGS <span className="text-muted-foreground/50">(showing {Math.min(5, data.examples.length)} of {data.aiCount} matches)</span>
+                </div>
                 <ul className="space-y-2">
-                  {data.examples.slice(0, 3).map((ex, idx) => (
+                  {data.examples.slice(0, 5).map((ex, idx) => (
                     <li key={`${ex.title}-${idx}`} className="text-[11px] font-mono">
                       {ex.url ? (
                         <a
@@ -175,15 +190,47 @@ export function AiPressurePanel({ sector, days, data, onClose }: AiPressurePanel
                     </li>
                   ))}
                 </ul>
+                <a
+                  href="https://www.usajobs.gov/Search/Results?k=artificial%20intelligence%20OR%20machine%20learning"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-block mt-2 text-[10px] font-mono text-muted-foreground hover:text-accent hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Search all AI jobs on USAJOBS →
+                </a>
               </div>
             )}
 
-            {/* Explanation */}
-            <div className="pt-2 border-t border-card-border/30">
+            {/* Why this exists */}
+            <div className="pt-3 mt-1 border-t border-card-border space-y-2">
+              <p className="text-[10px] text-muted-foreground/70 leading-relaxed">
+                <span className="text-foreground/80 font-medium">Why track this?</span> JOLTS tells us how many jobs exist, 
+                but not what skills employers want. When AI keywords start appearing in job descriptions that 
+                didn&apos;t have them before, it signals a shift in what &quot;qualified&quot; means — and 
+                potentially fewer humans needed per role.
+              </p>
               <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
-                Data from USAJOBS.gov API. Shows federal job postings matching AI-related keywords 
-                like &quot;machine learning&quot;, &quot;LLM&quot;, &quot;prompt engineering&quot;, etc.
-                Private sector jobs not included.
+                Data from{" "}
+                <a 
+                  href="https://www.usajobs.gov/" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="text-muted-foreground hover:text-foreground hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  USAJOBS.gov
+                </a>
+                {" "}API (federal jobs only). Feature contributed by{" "}
+                <a 
+                  href="https://github.com/grandSpecial" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="text-muted-foreground hover:text-foreground hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  @grandSpecial
+                </a>.
               </p>
             </div>
           </div>
