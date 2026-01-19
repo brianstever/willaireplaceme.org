@@ -58,7 +58,7 @@ export function SectorFilter({ sectors, selectedSectors, onToggle, accentColor =
           isParticipationMode ? "Filter participation by industry" :
           "Filter by economic sector"
         }
-        className="flex flex-wrap gap-2"
+        className="flex flex-wrap gap-2 min-h-[68px]"
       >
         {sortedSectors.map((sector) => {
           const isSelected = selectedSectors.includes(sector);

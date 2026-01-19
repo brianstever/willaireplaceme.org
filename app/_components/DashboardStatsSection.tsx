@@ -32,16 +32,18 @@ export function DashboardStatsSection({
       )}
 
       {isLoading ? (
-        <InsightSkeleton />
-      ) : (
-        <div className="sm:hidden">
-          <InsightRotator insights={insights} />
-        </div>
-      )}
-      {!isLoading && (
         <div className="hidden sm:block">
-          <InsightRotator insights={insights} />
+          <InsightSkeleton />
         </div>
+      ) : (
+        <>
+          <div className="sm:hidden">
+            <InsightRotator insights={insights} />
+          </div>
+          <div className="hidden sm:block">
+            <InsightRotator insights={insights} />
+          </div>
+        </>
       )}
     </section>
   );

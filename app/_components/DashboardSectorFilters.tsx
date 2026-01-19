@@ -1,10 +1,12 @@
 "use client";
 
 import { SectorFilter } from "./SectorFilter";
+import { FilterSkeleton } from "./StatsSkeleton";
 import { ViewMode } from "./ViewToggle";
 
 interface DashboardSectorFiltersProps {
   viewMode: ViewMode;
+  isLoading: boolean;
   sectors: string[];
   selectedSectors: string[];
   onSectorToggle: (sector: string) => void;
@@ -17,6 +19,7 @@ interface DashboardSectorFiltersProps {
 
 export function DashboardSectorFilters({
   viewMode,
+  isLoading,
   sectors,
   selectedSectors,
   onSectorToggle,
@@ -26,6 +29,14 @@ export function DashboardSectorFilters({
   selectedParticipationSectors,
   onParticipationSectorToggle,
 }: DashboardSectorFiltersProps) {
+  if (isLoading) {
+    return (
+      <section className="shrink-0">
+        <FilterSkeleton />
+      </section>
+    );
+  }
+
   return (
     <>
       {viewMode === "openings" && sectors.length > 0 && (

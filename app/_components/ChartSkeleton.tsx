@@ -18,11 +18,16 @@ export function ChartSkeleton() {
         </div>
 
         {/* Right controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-end min-w-0 flex-1">
           {/* Trend toggle */}
           <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] bg-secondary/30 border border-white/10">
             <div className="w-6 h-0.5 bg-card-border/40 rounded" />
             <span className="opacity-30">Trend</span>
+          </div>
+          {/* ChatGPT toggle */}
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] bg-secondary/30 border border-white/10">
+            <div className="w-0.5 h-3 bg-card-border/40 rounded" />
+            <span className="opacity-30">ChatGPT Release Date</span>
           </div>
           {/* Trend indicator */}
           <div className="flex items-center gap-1 px-1.5 py-0.5 rounded border border-card-border/20 bg-card-border/10">
@@ -35,29 +40,14 @@ export function ChartSkeleton() {
       </div>
 
       {/* Chart container with animated shimmer */}
-      <div className="rounded-lg overflow-hidden bg-gradient-to-b from-black/20 to-black/40 border border-white/5 flex-1 min-h-0 relative">
+      <div className="rounded-lg overflow-hidden bg-linear-to-b from-black/20 to-black/40 border border-white/5 flex-1 min-h-[300px] relative">
         {/* Animated shimmer overlay */}
-        <div 
-          className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite]"
-          style={{
-            background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.03) 50%, transparent 100%)",
-          }}
-        />
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] chart-skeleton-shimmer" />
         
         {/* Subtle glass texture */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent" />
       </div>
 
-      <style jsx>{`
-        @keyframes shimmer {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(100%);
-          }
-        }
-      `}</style>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { ChartControls } from "@/components/ChartControls";
+import { ChartControls } from "@/app/_components/ChartControls";
 
 describe("ChartControls", () => {
   const defaultProps = {

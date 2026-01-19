@@ -28,6 +28,10 @@ interface ChartControlsProps {
   chartLabel?: string;
   /** Whether to invert trend colors (for unemployment, up is bad) */
   invertTrendColors?: boolean;
+  /** Whether ChatGPT reference line is visible */
+  showChatGPTLine?: boolean;
+  /** Callback when ChatGPT line visibility changes */
+  onChatGPTLineChange?: (show: boolean) => void;
 }
 
 export function ChartControls({
@@ -40,6 +44,8 @@ export function ChartControls({
   trendColor = "#ef4444",
   chartLabel = "data",
   invertTrendColors = false,
+  showChatGPTLine = true,
+  onChatGPTLineChange,
 }: ChartControlsProps) {
   // For unemployment, up is bad (red), down is good (green)
   // For job openings, up is good (green), down is bad (red)
@@ -90,6 +96,31 @@ export function ChartControls({
           </svg>
           Trend
         </button>
+
+        {/* ChatGPT Line Toggle */}
+        {onChatGPTLineChange && (
+          <button
+            onClick={() => onChatGPTLineChange(!showChatGPTLine)}
+            aria-pressed={showChatGPTLine}
+            aria-label={showChatGPTLine ? "Hide ChatGPT release marker" : "Show ChatGPT release marker"}
+            className={`flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] transition-all border shrink-0 ${
+              showChatGPTLine 
+                ? "bg-secondary/30 border-white/10 text-foreground" 
+                : "bg-transparent border-transparent text-muted-foreground hover:bg-secondary/10"
+            }`}
+          >
+            <svg width="2" height="12" viewBox="0 0 2 12" fill="none" aria-hidden="true">
+              <line 
+                x1="1" y1="0" x2="1" y2="12" 
+                stroke={showChatGPTLine ? "#10b981" : "#737373"} 
+                strokeWidth="2" 
+                strokeDasharray="3 2" 
+                strokeLinecap="round"
+              />
+            </svg>
+            ChatGPT Release Date
+          </button>
+        )}
 
         {/* Trend Indicator */}
         {trendInfo && (
