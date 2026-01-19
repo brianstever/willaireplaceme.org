@@ -284,11 +284,10 @@ export default function Home() {
           {/* View Toggle + AI Skills Toggle */}
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
-            {viewMode === "openings" && (
+            {viewMode === "openings" && aiSkillsData && Object.keys(aiSkillsData).length > 0 && (
               <AiSkillsToggle 
                 enabled={aiEnabled} 
                 onToggle={handleAiToggle}
-                isLoading={aiSkillsLoading}
               />
             )}
           </div>
@@ -319,8 +318,8 @@ export default function Home() {
             aiPressureBySector={aiPressureBySector}
           />
 
-          {/* AI Pressure Panel - shows aggregated data for selected sectors */}
-          {viewMode === "openings" && aiEnabled && (
+          {/* AI Pressure Panel - only show when we have snapshot data */}
+          {viewMode === "openings" && aiEnabled && aggregatedAiData && (
             <AiPressurePanel
               sector={aiPanelLabel}
               days={14}
