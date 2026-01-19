@@ -200,8 +200,8 @@ describe("Home Page Integration", () => {
   it("renders header with title", () => {
     render(<Home />);
 
+    expect(screen.getByText(/Will AI Replace Me\?/i)).toBeInTheDocument();
     expect(screen.getByText(/Job Openings & Labor Turnover Survey/i)).toBeInTheDocument();
-    expect(screen.getByText(/BLS DATA/)).toBeInTheDocument();
   });
 
   it("renders footer with links", () => {

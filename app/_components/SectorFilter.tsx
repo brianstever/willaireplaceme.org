@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, type CSSProperties } from "react";
 import { SECTOR_LABELS } from "@/lib/bls";
 
 const SECTOR_DESCRIPTIONS: Record<string, string> = {
@@ -29,9 +29,19 @@ interface SectorFilterProps {
   selectedSectors: string[];
   onToggle: (sector: string) => void;
   accentColor?: string;
+  aiPressureBySector?: Record<
+    string,
+    { aiShare: number | null; total: number; note?: string; error?: string }
+  >;
 }
 
-export function SectorFilter({ sectors, selectedSectors, onToggle, accentColor = "#ef4444" }: SectorFilterProps) {
+export function SectorFilter({
+  sectors,
+  selectedSectors,
+  onToggle,
+  accentColor = "#ef4444",
+  aiPressureBySector,
+}: SectorFilterProps) {
   const [hoveredSector, setHoveredSector] = useState<string | null>(null);
   const descriptionId = useId();
 
@@ -50,7 +60,7 @@ export function SectorFilter({ sectors, selectedSectors, onToggle, accentColor =
     });
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       <div 
         role="group" 
         aria-label={
@@ -58,15 +68,16 @@ export function SectorFilter({ sectors, selectedSectors, onToggle, accentColor =
           isParticipationMode ? "Filter participation by industry" :
           "Filter by economic sector"
         }
-        className="flex flex-wrap gap-2 min-h-[68px]"
+        className="flex flex-wrap gap-1.5"
       >
         {sortedSectors.map((sector) => {
           const isSelected = selectedSectors.includes(sector);
           const isHovered = hoveredSector === sector;
           const sectorDescId = `${descriptionId}-${sector}`;
+          const ai = aiPressureBySector?.[sector];
           
           // Build style based on state
-          const buttonStyle: React.CSSProperties | undefined = 
+          const buttonStyle: CSSProperties | undefined = 
             isSelected ? { 
               backgroundColor: `${accentColor}15`,
               borderColor: accentColor,
@@ -90,7 +101,21 @@ export function SectorFilter({ sectors, selectedSectors, onToggle, accentColor =
               className={`sector-pill ${isSelected ? "active" : ""}`}
               style={buttonStyle}
             >
-              {SECTOR_LABELS[sector] || sector}
+              <span className="flex items-center gap-2">
+                <span>{SECTOR_LABELS[sector] || sector}</span>
+                {ai && !ai.error && (
+                  <span
+                    className="text-[9px] font-mono px-1 py-0.5 rounded border border-white/10 bg-secondary/20 text-muted-foreground"
+                    aria-label={
+                      ai.aiShare === null
+                        ? `AI skill mentions unavailable due to low sample (${ai.total} postings)`
+                        : `AI skill mentions ${(ai.aiShare * 100).toFixed(0)}% of ${ai.total} postings`
+                    }
+                  >
+                    AI {ai.aiShare === null ? "—" : `${Math.round(ai.aiShare * 100)}%`}
+                  </span>
+                )}
+              </span>
               <span id={sectorDescId} className="sr-only">
                 {SECTOR_DESCRIPTIONS[sector] || `${sector} sector data`}
               </span>
@@ -101,12 +126,12 @@ export function SectorFilter({ sectors, selectedSectors, onToggle, accentColor =
       
       {/* Hover tooltip */}
       <div 
-        className="h-5 overflow-hidden" 
+        className="h-4 overflow-hidden" 
         aria-hidden="true"
         data-testid="tooltip-container"
       >
         <p 
-          className={`text-[10px] text-muted-foreground/70 font-mono transition-opacity duration-200 ${
+          className={`text-[9px] text-muted-foreground/60 font-mono transition-opacity duration-200 ${
             hoveredSector ? "opacity-100" : "opacity-0"
           }`}
           data-testid="tooltip-text"
