@@ -67,23 +67,21 @@ it("imports valid series but does not advance global success after a missing ser
   const t = fresh();
   vi.stubGlobal(
     "fetch",
-    vi
-      .fn()
-      .mockResolvedValue(
-        new Response(
-          JSON.stringify({
-            status: "REQUEST_SUCCEEDED",
-            Results: {
-              series: ALL_SECTORS.filter((key) => key !== "professional").map(
-                (key) => ({
-                  seriesID: SERIES[key].id,
-                  data: [{ year: "2026", period: "M07", value: "4" }],
-                }),
-              ),
-            },
-          }),
-        ),
+    vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          status: "REQUEST_SUCCEEDED",
+          Results: {
+            series: ALL_SECTORS.filter((key) => key !== "professional").map(
+              (key) => ({
+                seriesID: SERIES[key].id,
+                data: [{ year: "2026", period: "M07", value: "4" }],
+              }),
+            ),
+          },
+        }),
       ),
+    ),
   );
   await expect(t.action(internal.blsFetch.fetchLatestData, {})).rejects.toThrow(
     "professional",
@@ -104,22 +102,20 @@ it("publishes complete BLS imports through the scheduled action", async () => {
   const t = fresh();
   vi.stubGlobal(
     "fetch",
-    vi
-      .fn()
-      .mockImplementation(
-        async () =>
-          new Response(
-            JSON.stringify({
-              status: "REQUEST_SUCCEEDED",
-              Results: {
-                series: ALL_SECTORS.map((key) => ({
-                  seriesID: SERIES[key].id,
-                  data: [{ year: "2026", period: "M07", value: "4" }],
-                })),
-              },
-            }),
-          ),
-      ),
+    vi.fn().mockImplementation(
+      async () =>
+        new Response(
+          JSON.stringify({
+            status: "REQUEST_SUCCEEDED",
+            Results: {
+              series: ALL_SECTORS.map((key) => ({
+                seriesID: SERIES[key].id,
+                data: [{ year: "2026", period: "M07", value: "4" }],
+              })),
+            },
+          }),
+        ),
+    ),
   );
   await t.action(internal.blsFetch.fetchLatestData, {});
   expect(await t.query(api.jobs.getJobOpenings, {})).toHaveLength(
@@ -173,33 +169,34 @@ it("publishes federal counts through the scheduled action without legacy snapsho
   vi.stubEnv("USAJOBS_USER_AGENT", "test@example.com");
   vi.stubGlobal(
     "fetch",
-    vi
-      .fn()
-      .mockResolvedValue(
-        new Response(
-          JSON.stringify({
-            SearchResult: {
-              SearchResultCountAll: 1,
-              SearchResultItems: [
-                {
-                  MatchedObjectId: "123",
-                  MatchedObjectDescriptor: {
-                    PositionTitle: "Machine learning engineer",
-                    OrganizationName: "Agency",
-                    PositionURI: "https://www.usajobs.gov/job/123",
-                    PositionCategory: [{ Code: "2210", Name: "IT Management" }],
-                  },
+    vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          SearchResult: {
+            SearchResultCountAll: 1,
+            SearchResultItems: [
+              {
+                MatchedObjectId: "123",
+                MatchedObjectDescriptor: {
+                  PositionTitle: "Machine learning engineer",
+                  OrganizationName: "Agency",
+                  PositionURI: "https://www.usajobs.gov/job/123",
+                  JobCategory: [{ Code: "2210", Name: "IT Management" }],
                 },
-              ],
-            },
-          }),
-        ),
+              },
+            ],
+          },
+        }),
       ),
+    ),
   );
   await t.action(internal.usajobsFetch.fetchAiSkillSnapshot, {});
   const result = await t.query(api.usajobsQueries.getFederalAnnouncements, {});
   expect(result.status?.state).toBe("complete");
   expect(result.snapshot?.groups[0]).toMatchObject({ total: 1, matches: 1 });
+  expect(
+    result.snapshot?.groups.find((group) => group.code === "2210")?.total,
+  ).toBe(1);
   expect(
     await t.run((ctx) => ctx.db.query("ai_skill_snapshots").collect()),
   ).toHaveLength(0);

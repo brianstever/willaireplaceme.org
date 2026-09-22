@@ -22,7 +22,7 @@ const responseSchema = z.object({
           OrganizationName: z.string(),
           PositionURI: z.string().url(),
           QualificationSummary: z.string().optional(),
-          PositionCategory: z
+          JobCategory: z
             .array(z.object({ Code: z.string(), Name: z.string().optional() }))
             .optional()
             .default([]),
@@ -133,7 +133,7 @@ export async function collectAnnouncements(args: {
         .flat()
         .filter(Boolean)
         .join("\n");
-      const occupations = item.PositionCategory.map((category) => ({
+      const occupations = item.JobCategory.map((category) => ({
         code: category.Code,
         label: category.Name || `Occupational series ${category.Code}`,
       }));
@@ -239,15 +239,13 @@ export function summarizeAnnouncements(
           .sort(
             (a, b) => b.count - a.count || a.keyword.localeCompare(b.keyword),
           ),
-        examples: matched
-          .slice(0, 5)
-          .map(({ item, keywords }) => ({
-            id: item.id,
-            title: item.title,
-            agency: item.agency,
-            url: item.url,
-            keywords,
-          })),
+        examples: matched.slice(0, 5).map(({ item, keywords }) => ({
+          id: item.id,
+          title: item.title,
+          agency: item.agency,
+          url: item.url,
+          keywords,
+        })),
       };
     })
     .sort((a, b) =>
