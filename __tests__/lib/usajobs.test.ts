@@ -1,121 +1,139 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import {
-  computeAiPressureFromSearchItems,
-  type UsaJobsSearchItem,
+  collectAnnouncements,
+  summarizeAnnouncements,
+  type Announcement,
 } from "@/lib/usajobs";
 
-function makeItem(matchText: string, title?: string): UsaJobsSearchItem {
+function raw(id: string, title = "General office work") {
   return {
-    matchText,
-    positionTitle: title ?? "Test Position",
-    organizationName: "Test Agency",
+    MatchedObjectId: id,
+    MatchedObjectDescriptor: {
+      PositionTitle: title,
+      OrganizationName: "Agency",
+      PositionURI: `https://www.usajobs.gov/job/${id}`,
+      JobCategory: [{ Code: "0301", Name: "Administration" }],
+    },
   };
 }
+const page = (items: ReturnType<typeof raw>[], count: number) =>
+  new Response(
+    JSON.stringify({
+      SearchResult: {
+        SearchResultCountAll: String(count),
+        SearchResultItems: items,
+      },
+    }),
+  );
+const args = {
+  authorizationKey: "test",
+  userAgent: "test@example.com",
+  days: 14,
+};
+afterEach(() => vi.unstubAllGlobals());
 
-describe("computeAiPressureFromSearchItems", () => {
-  it("returns zero counts for empty items", () => {
-    const result = computeAiPressureFromSearchItems({ items: [] });
-    expect(result.total).toBe(0);
-    expect(result.aiCount).toBe(0);
-    expect(result.aiShare).toBe(null);
-    expect(result.topKeywords).toEqual([]);
-    expect(result.examples).toEqual([]);
-  });
+it("retrieves subsequent pages and requests an unfiltered baseline", async () => {
+  const fetcher = vi
+    .fn()
+    .mockResolvedValueOnce(
+      page(
+        Array.from({ length: 500 }, (_, i) => raw(String(i))),
+        501,
+      ),
+    )
+    .mockResolvedValueOnce(page([raw("500", "Machine learning")], 501));
+  vi.stubGlobal("fetch", fetcher);
+  const result = await collectAnnouncements(args);
+  expect(result.complete).toBe(true);
+  expect(result.items).toHaveLength(501);
+  expect(summarizeAnnouncements(result.items)[0].matches).toBe(1);
+  expect(
+    summarizeAnnouncements(result.items).find((group) => group.code === "0301")
+      ?.total,
+  ).toBe(501);
+  const urls = fetcher.mock.calls.map((call) => new URL(call[0]));
+  expect(urls[1].searchParams.get("Page")).toBe("2");
+  expect(urls[0].searchParams.has("JobCategoryCode")).toBe(false);
+});
 
-  it("counts items with AI keywords", () => {
-    const items = [
-      makeItem("Experience with machine learning required"),
-      makeItem("General administrative work"),
-      makeItem("Pytorch and tensorflow skills"),
-    ];
-    const result = computeAiPressureFromSearchItems({ items });
-    expect(result.total).toBe(3);
-    expect(result.aiCount).toBe(2);
-  });
-
-  it("returns aiShare as null when sample too small", () => {
-    const items = [
-      makeItem("machine learning"),
-      makeItem("deep learning"),
-    ];
-    const result = computeAiPressureFromSearchItems({
-      items,
-      minSampleForShare: 20,
-    });
-    expect(result.aiShare).toBe(null);
-    expect(result.note).toContain("Low sample");
-  });
-
-  it("returns aiShare when sample is large enough", () => {
-    const items = Array(25).fill(null).map((_, i) =>
-      makeItem(i < 10 ? "machine learning" : "no keywords", `Position ${i}`)
-    );
-    const result = computeAiPressureFromSearchItems({
-      items,
-      minSampleForShare: 20,
-    });
-    expect(result.aiShare).toBe(10 / 25);
-    expect(result.note).toBeUndefined();
-  });
-
-  it("extracts top keywords sorted by count", () => {
-    const items = [
-      makeItem("machine learning and pytorch"),
-      makeItem("machine learning and tensorflow"),
-      makeItem("machine learning"),
-      makeItem("pytorch"),
-    ];
-    const result = computeAiPressureFromSearchItems({ items });
-    expect(result.topKeywords[0].keyword).toBe("machine learning");
-    expect(result.topKeywords[0].count).toBe(3);
-  });
-
-  it("limits examples to maxExamples", () => {
-    const items = Array(10).fill(null).map((_, i) =>
-      makeItem("llm experience", `Position ${i}`)
-    );
-    const result = computeAiPressureFromSearchItems({
-      items,
-      maxExamples: 3,
-    });
-    expect(result.examples.length).toBe(3);
-  });
-
-  it("includes matched keywords in examples", () => {
-    const items = [makeItem("pytorch and tensorflow", "ML Engineer")];
-    const result = computeAiPressureFromSearchItems({ items });
-    expect(result.examples[0].matchedKeywords).toContain("pytorch");
-    expect(result.examples[0].matchedKeywords).toContain("tensorflow");
-  });
-
-  it("skips items without positionTitle for examples", () => {
-    const items: UsaJobsSearchItem[] = [
-      { matchText: "llm experience" }, // no title
-      { matchText: "llm experience", positionTitle: "Has Title" },
-    ];
-    const result = computeAiPressureFromSearchItems({ items });
-    expect(result.examples.length).toBe(1);
-    expect(result.examples[0].title).toBe("Has Title");
-  });
-
-  it("includes agency info in examples", () => {
-    const items: UsaJobsSearchItem[] = [{
-      matchText: "machine learning",
-      positionTitle: "Data Scientist",
-      organizationName: "NASA",
-      departmentName: "Science Division",
-    }];
-    const result = computeAiPressureFromSearchItems({ items });
-    expect(result.examples[0].agency).toBe("NASA");
-    expect(result.examples[0].department).toBe("Science Division");
-  });
-
-  it("limits topKeywords to 8", () => {
-    // Create items with many different keywords
-    const items = [
-      makeItem("machine learning deep learning pytorch tensorflow openai chatgpt claude gemini llm nlp computer vision"),
-    ];
-    const result = computeAiPressureFromSearchItems({ items });
-    expect(result.topKeywords.length).toBeLessThanOrEqual(8);
+it("withholds completion when a page repeats announcements", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi
+      .fn()
+      .mockResolvedValueOnce(
+        page(
+          Array.from({ length: 500 }, (_, i) => raw(String(i))),
+          501,
+        ),
+      )
+      .mockResolvedValueOnce(page([raw("0")], 501)),
+  );
+  const result = await collectAnnouncements(args);
+  expect(result.complete).toBe(false);
+  expect(result.items).toHaveLength(500);
+});
+it("withholds completion when capped or the population changes", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(
+      page(
+        Array.from({ length: 500 }, (_, i) => raw(String(i))),
+        501,
+      ),
+    ),
+  );
+  expect((await collectAnnouncements({ ...args, maxPages: 1 })).complete).toBe(
+    false,
+  );
+  vi.stubGlobal(
+    "fetch",
+    vi
+      .fn()
+      .mockResolvedValueOnce(
+        page(
+          Array.from({ length: 500 }, (_, i) => raw(String(i))),
+          501,
+        ),
+      )
+      .mockResolvedValueOnce(page([raw("500")], 502)),
+  );
+  expect((await collectAnnouncements(args)).complete).toBe(false);
+});
+it("fails promptly on invalid credentials or malformed responses", async () => {
+  const fetcher = vi.fn().mockResolvedValue(new Response("", { status: 401 }));
+  vi.stubGlobal("fetch", fetcher);
+  await expect(collectAnnouncements(args)).rejects.toThrow("401");
+  expect(fetcher).toHaveBeenCalledTimes(1);
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("{}")));
+  await expect(collectAnnouncements(args)).rejects.toThrow();
+});
+it("deduplicates announcements and overlapping occupations before counting", () => {
+  const item: Announcement = {
+    id: "1",
+    title: "Engineer",
+    agency: "Agency",
+    url: "https://www.usajobs.gov/job/1",
+    text: "machine learning",
+    occupations: [{ code: "0801", label: "Engineering" }],
+  };
+  const result = summarizeAnnouncements([
+    item,
+    {
+      ...item,
+      occupations: [{ code: "2210", label: "Information technology" }],
+    },
+  ]);
+  expect(result[0].total).toBe(1);
+  expect(result[0].matches).toBe(1);
+  expect(result.find((g) => g.code === "0801")?.total).toBe(1);
+  expect(result.find((g) => g.code === "2210")?.total).toBe(1);
+});
+it("accepts a genuinely empty collection", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(page([], 0)));
+  expect(await collectAnnouncements(args)).toMatchObject({
+    available: 0,
+    complete: true,
+    items: [],
   });
 });

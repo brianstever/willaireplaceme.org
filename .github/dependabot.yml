@@ -1,0 +1,12 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      next:
+        patterns: [next, eslint-config-next]
+      testing:
+        patterns: [vitest, "@vitest/*", "@testing-library/*", convex-test]

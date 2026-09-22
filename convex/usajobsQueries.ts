@@ -1,30 +1,47 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
+import { FEDERAL_METHOD_VERSION } from "../lib/federal";
 
 // Get latest AI skill snapshot for all sectors
 export const getLatestAiSkills = query({
   args: {},
   handler: async (ctx) => {
-    const sectors = ["total", "information", "healthcare", "professional", "manufacturing", "government", "retail"];
-    
+    const sectors = [
+      "total",
+      "information",
+      "healthcare",
+      "professional",
+      "manufacturing",
+      "government",
+      "retail",
+    ];
+
     const results = await Promise.all(
       sectors.map((sector) =>
         ctx.db
           .query("ai_skill_snapshots")
           .withIndex("by_sector_date", (q) => q.eq("sector", sector))
           .order("desc")
-          .first()
-      )
+          .first(),
+      ),
     );
 
-    const bySector: Record<string, {
-      date: string;
-      total: number;
-      aiCount: number;
-      aiShare: number | null;
-      topKeywords: Array<{ keyword: string; count: number }>;
-      examples: Array<{ title: string; agency?: string; url?: string; matchedKeywords: string[] }>;
-    }> = {};
+    const bySector: Record<
+      string,
+      {
+        date: string;
+        total: number;
+        aiCount: number;
+        aiShare: number | null;
+        topKeywords: Array<{ keyword: string; count: number }>;
+        examples: Array<{
+          title: string;
+          agency?: string;
+          url?: string;
+          matchedKeywords: string[];
+        }>;
+      }
+    > = {};
 
     for (const result of results) {
       if (result) {
@@ -75,5 +92,30 @@ export const getAiSkillsMetadata = query({
     return {
       lastUpdated: lastUpdated?.value ?? null,
     };
+  },
+});
+
+export const getFederalAnnouncements = query({
+  args: {},
+  handler: async (ctx) => {
+    const row = await ctx.db
+      .query("federal_snapshots")
+      .withIndex("by_method_date", (q) =>
+        q.eq("methodVersion", FEDERAL_METHOD_VERSION),
+      )
+      .order("desc")
+      .first();
+    const status = await ctx.db.query("federal_status").first();
+    // IDs are retained for collection checks, but not needed by the dashboard.
+    const snapshot = row
+      ? {
+          ...row,
+          groups: row.groups.map((group) => ({
+            ...group,
+            announcementIds: [],
+          })),
+        }
+      : null;
+    return { snapshot, status };
   },
 });

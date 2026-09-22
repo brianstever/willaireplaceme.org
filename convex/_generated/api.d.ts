@@ -10,6 +10,7 @@
 
 import type * as blsFetch from "../blsFetch.js";
 import type * as crons from "../crons.js";
+import type * as federalValidators from "../federalValidators.js";
 import type * as jobMutations from "../jobMutations.js";
 import type * as jobs from "../jobs.js";
 import type * as usajobsFetch from "../usajobsFetch.js";
@@ -25,6 +26,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   blsFetch: typeof blsFetch;
   crons: typeof crons;
+  federalValidators: typeof federalValidators;
   jobMutations: typeof jobMutations;
   jobs: typeof jobs;
   usajobsFetch: typeof usajobsFetch;
