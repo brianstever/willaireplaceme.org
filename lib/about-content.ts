@@ -70,25 +70,28 @@ export const CHART_FEATURES: ViewFeature[] = [
   {
     title: "TIME RANGE CONTROLS",
     description:
-      "Filter data by time period: 1Y, 3Y, 5Y, 10Y, or ALL. Each view remembers your selection independently.",
+      "Filter data by time period: 1Y, 3Y, 5Y, 10Y, or ALL. The selected range is shared across views.",
     borderColor: "border-white/20",
   },
   {
     title: "TRENDLINE TOGGLE",
     description:
-      "Enable a linear regression trendline to visualize the overall direction of the data. The trend indicator shows the percentage change over the selected period.",
+      "Enable a linear regression trendline to visualize the overall direction of the data. The change indicator compares the first and last observations in the selected period, using percent for openings and percentage points for rates.",
     borderColor: "border-white/20",
   },
   {
     title: "CHATGPT RELEASE DATE",
     description:
-      "A vertical reference line marks November 2022—when ChatGPT launched. Notably, this coincides with the local maximum of job openings before the subsequent decline. Toggle this marker on/off via the chart controls.",
+      "A vertical reference line marks November 2022—when ChatGPT launched. The marker is historical context; it does not establish a causal relationship with changes in openings. Toggle this marker on/off via the chart controls.",
     borderColor: "border-emerald-500",
   },
 ];
 
 export const REFERENCE_LINKS: ReferenceLink[] = [
   { href: "https://www.bls.gov/jlt/", label: "BLS JOLTS Overview" },
-  { href: "https://www.bls.gov/jlt/jltover.htm", label: "JOLTS Technical Notes" },
+  {
+    href: "https://www.bls.gov/jlt/jltover.htm",
+    label: "JOLTS Technical Notes",
+  },
   { href: "https://www.bls.gov/developers/", label: "BLS Public Data API" },
 ];

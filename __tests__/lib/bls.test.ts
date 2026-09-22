@@ -1,247 +1,110 @@
 import { describe, it, expect } from "vitest";
-import {
-  BLS_SERIES,
-  SECTOR_LABELS,
-  transformBLSData,
-} from "@/lib/bls";
+import { parseBlsResponse } from "@/lib/bls-client";
+import { SERIES, validateObservation } from "@/lib/bls";
 
-describe("BLS_SERIES", () => {
-  it("contains all expected sectors", () => {
-    const sectors = Object.keys(BLS_SERIES);
-    expect(sectors).toContain("total");
-    expect(sectors).toContain("manufacturing");
-    expect(sectors).toContain("healthcare");
-    expect(sectors).toContain("retail");
-    expect(sectors).toContain("professional");
-    expect(sectors).toContain("information");
-    expect(sectors).toContain("government");
-  });
+const point = {
+  year: "2026",
+  period: "M07",
+  value: "7271",
+  footnotes: [{ code: "P", text: "preliminary" }],
+};
+const response = (data: unknown[], id: string = SERIES.total.id) => ({
+  status: "REQUEST_SUCCEEDED",
+  Results: { series: [{ seriesID: id, data }] },
+});
 
-  it("has correct series ID format for JOLTS data", () => {
-    // All JOLTS series IDs start with JTS
-    Object.values(BLS_SERIES).forEach((seriesId) => {
-      expect(seriesId).toMatch(/^JTS/);
+describe("BLS response validation", () => {
+  it("preserves source flags and reports missing series independently", () => {
+    const result = parseBlsResponse(response([point]), [
+      "total",
+      "professional",
+    ]);
+    expect(result[0].points[0]).toEqual({
+      date: "2026-07",
+      value: 7271,
+      preliminary: true,
+      footnotes: ["preliminary"],
     });
+    expect(result[1].error).toMatch(/missing/);
   });
-
-  it("total nonfarm has correct series ID", () => {
-    expect(BLS_SERIES.total).toBe("JTS000000000000000JOL");
+  it("preserves documented missing values without converting them to zero", () => {
+    const result = parseBlsResponse(
+      response([
+        point,
+        {
+          ...point,
+          period: "M06",
+          value: "-",
+          footnotes: [{ text: "Unavailable" }],
+        },
+        { ...point, period: "M13" },
+      ]),
+      ["total"],
+    )[0];
+    expect(result.points).toHaveLength(1);
+    expect(result.missing).toEqual([
+      { date: "2026-06", footnotes: ["Unavailable"] },
+    ]);
+    expect(result.error).toBeUndefined();
   });
-
-  it("information sector has correct series ID", () => {
-    expect(BLS_SERIES.information).toBe("JTS510000000000000JOL");
+  it.each(["12abc", "Infinity", "NaN", "", "-1"])(
+    "rejects malformed number %s",
+    (value) => {
+      expect(
+        parseBlsResponse(response([{ ...point, value }]), ["total"])[0].error,
+      ).toBeDefined();
+    },
+  );
+  it.each(["M00", "M14", "M1", "Q01"])(
+    "rejects malformed period %s",
+    (period) => {
+      expect(
+        parseBlsResponse(response([{ ...point, period }]), ["total"])[0].error,
+      ).toBeDefined();
+    },
+  );
+  it("allows zero and rejects percentages above 100", () => {
+    expect(() =>
+      validateObservation("unemployment_rate", "2026-07", 0),
+    ).not.toThrow();
+    expect(() =>
+      validateObservation("unemployment_rate", "2026-07", 101),
+    ).toThrow();
+  });
+  it("does not treat a top-level failure or malformed response as an empty success", () => {
+    expect(() =>
+      parseBlsResponse({ status: "REQUEST_FAILED" }, ["total"]),
+    ).toThrow();
+    expect(() => parseBlsResponse({}, ["total"])).toThrow();
+  });
+  it("retains warnings and rejects duplicate observations", () => {
+    const input = {
+      ...response([point, point]),
+      message: [`Warning for ${SERIES.total.id}`],
+    };
+    const result = parseBlsResponse(input, ["total"])[0];
+    expect(result.warnings).toHaveLength(1);
+    expect(result.error).toMatch(/Duplicate/);
   });
 });
 
-describe("SECTOR_LABELS", () => {
-  it("has labels for all BLS_SERIES sectors", () => {
-    Object.keys(BLS_SERIES).forEach((sector) => {
-      expect(SECTOR_LABELS[sector]).toBeDefined();
-      expect(typeof SECTOR_LABELS[sector]).toBe("string");
-    });
-  });
-
-  it("has label for unemployment_rate", () => {
-    // unemployment_rate serves as "ALL INDUSTRIES" in unemployment industry filter
-    expect(SECTOR_LABELS.unemployment_rate).toBe("ALL INDUSTRIES");
-  });
-
-  it("labels are uppercase", () => {
-    Object.values(SECTOR_LABELS).forEach((label) => {
-      expect(label).toBe(label.toUpperCase());
-    });
-  });
-
-  it("total label is TOTAL NONFARM", () => {
-    expect(SECTOR_LABELS.total).toBe("TOTAL NONFARM");
-  });
-});
-
-describe("transformBLSData", () => {
-  it("transforms BLS response to our format", () => {
-    const mockResponse = {
-      status: "REQUEST_SUCCEEDED",
-      Results: {
-        series: [
-          {
-            seriesID: "JTS000000000000000JOL",
-            data: [
-              { year: "2024", period: "M01", periodName: "January", value: "8500" },
-              { year: "2024", period: "M02", periodName: "February", value: "8600" },
-            ],
-          },
-        ],
-      },
-    };
-
-    const seriesIdToSector = {
-      JTS000000000000000JOL: "total",
-    };
-
-    const result = transformBLSData(mockResponse, seriesIdToSector);
-
-    expect(result).toHaveLength(2);
-    expect(result[0]).toEqual({ date: "2024-01", sector: "total", value: 8500 });
-    expect(result[1]).toEqual({ date: "2024-02", sector: "total", value: 8600 });
-  });
-
-  it("handles multiple series", () => {
-    const mockResponse = {
-      status: "REQUEST_SUCCEEDED",
-      Results: {
-        series: [
-          {
-            seriesID: "JTS000000000000000JOL",
-            data: [
-              { year: "2024", period: "M01", periodName: "January", value: "8500" },
-            ],
-          },
-          {
-            seriesID: "JTS510000000000000JOL",
-            data: [
-              { year: "2024", period: "M01", periodName: "January", value: "500" },
-            ],
-          },
-        ],
-      },
-    };
-
-    const seriesIdToSector = {
-      JTS000000000000000JOL: "total",
-      JTS510000000000000JOL: "information",
-    };
-
-    const result = transformBLSData(mockResponse, seriesIdToSector);
-
-    expect(result).toHaveLength(2);
-    expect(result.find(r => r.sector === "total")).toEqual({
-      date: "2024-01",
-      sector: "total",
-      value: 8500,
-    });
-    expect(result.find(r => r.sector === "information")).toEqual({
-      date: "2024-01",
-      sector: "information",
-      value: 500,
-    });
-  });
-
-  it("skips unknown series IDs", () => {
-    const mockResponse = {
-      status: "REQUEST_SUCCEEDED",
-      Results: {
-        series: [
-          {
-            seriesID: "UNKNOWN_SERIES",
-            data: [
-              { year: "2024", period: "M01", periodName: "January", value: "100" },
-            ],
-          },
-        ],
-      },
-    };
-
-    const seriesIdToSector = {
-      JTS000000000000000JOL: "total",
-    };
-
-    const result = transformBLSData(mockResponse, seriesIdToSector);
-    expect(result).toHaveLength(0);
-  });
-
-  it("skips invalid numeric values", () => {
-    const mockResponse = {
-      status: "REQUEST_SUCCEEDED",
-      Results: {
-        series: [
-          {
-            seriesID: "JTS000000000000000JOL",
-            data: [
-              { year: "2024", period: "M01", periodName: "January", value: "8500" },
-              { year: "2024", period: "M02", periodName: "February", value: "N/A" },
-              { year: "2024", period: "M03", periodName: "March", value: "8700" },
-            ],
-          },
-        ],
-      },
-    };
-
-    const seriesIdToSector = {
-      JTS000000000000000JOL: "total",
-    };
-
-    const result = transformBLSData(mockResponse, seriesIdToSector);
-    expect(result).toHaveLength(2);
-    expect(result[0].date).toBe("2024-01");
-    expect(result[1].date).toBe("2024-03");
-  });
-
-  it("pads single-digit months correctly", () => {
-    const mockResponse = {
-      status: "REQUEST_SUCCEEDED",
-      Results: {
-        series: [
-          {
-            seriesID: "JTS000000000000000JOL",
-            data: [
-              { year: "2024", period: "M1", periodName: "January", value: "8500" },
-              { year: "2024", period: "M9", periodName: "September", value: "8600" },
-            ],
-          },
-        ],
-      },
-    };
-
-    const seriesIdToSector = {
-      JTS000000000000000JOL: "total",
-    };
-
-    const result = transformBLSData(mockResponse, seriesIdToSector);
-    expect(result[0].date).toBe("2024-01");
-    expect(result[1].date).toBe("2024-09");
-  });
-
-  it("handles empty series data", () => {
-    const mockResponse = {
-      status: "REQUEST_SUCCEEDED",
-      Results: {
-        series: [
-          {
-            seriesID: "JTS000000000000000JOL",
-            data: [],
-          },
-        ],
-      },
-    };
-
-    const seriesIdToSector = {
-      JTS000000000000000JOL: "total",
-    };
-
-    const result = transformBLSData(mockResponse, seriesIdToSector);
-    expect(result).toHaveLength(0);
-  });
-
-  it("handles decimal values", () => {
-    const mockResponse = {
-      status: "REQUEST_SUCCEEDED",
-      Results: {
-        series: [
-          {
-            seriesID: "LNS14000000",
-            data: [
-              { year: "2024", period: "M01", periodName: "January", value: "3.7" },
-            ],
-          },
-        ],
-      },
-    };
-
-    const seriesIdToSector = {
-      LNS14000000: "unemployment_rate",
-    };
-
-    const result = transformBLSData(mockResponse, seriesIdToSector);
-    expect(result[0].value).toBe(3.7);
-  });
+it("uses professional-services observations, not the education and health aggregate", () => {
+  const source = {
+    status: "REQUEST_SUCCEEDED",
+    Results: {
+      series: [
+        {
+          seriesID: "JTS540099000000000JOL",
+          data: [{ ...point, value: "1138" }],
+        },
+        {
+          seriesID: "JTS600000000000000JOL",
+          data: [{ ...point, value: "1553" }],
+        },
+      ],
+    },
+  };
+  expect(parseBlsResponse(source, ["professional"])[0].points[0].value).toBe(
+    1138,
+  );
 });

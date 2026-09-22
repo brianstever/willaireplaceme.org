@@ -1,85 +1,72 @@
-import { internalMutation } from "./_generated/server";
+import { internalMutation, type MutationCtx } from "./_generated/server";
 import { v } from "convex/values";
+import { snapshotFields, statusFields } from "./federalValidators";
+import { FEDERAL_METHOD_VERSION, type FederalStatus } from "../lib/federal";
 
-export const storeAiSkillSnapshots = internalMutation({
-  args: {
-    snapshots: v.array(v.object({
-      date: v.string(),
-      sector: v.string(),
-      total: v.number(),
-      aiCount: v.number(),
-      aiShare: v.union(v.number(), v.null()),
-      topKeywords: v.array(v.object({
-        keyword: v.string(),
-        count: v.number(),
-      })),
-      examples: v.array(v.object({
-        title: v.string(),
-        agency: v.optional(v.string()),
-        url: v.optional(v.string()),
-        matchedKeywords: v.array(v.string()),
-      })),
-    })),
-  },
-  handler: async (ctx, args) => {
-    for (const snapshot of args.snapshots) {
-      // Upsert - check if we already have data for this date/sector
-      const existing = await ctx.db
-        .query("ai_skill_snapshots")
-        .withIndex("by_sector_date", (q) => 
-          q.eq("sector", snapshot.sector).eq("date", snapshot.date)
-        )
-        .first();
+async function saveStatus(ctx: MutationCtx, status: FederalStatus) {
+  const existing = await ctx.db.query("federal_status").first();
+  if (existing && existing.attemptedAt > status.attemptedAt) return;
+  if (existing) await ctx.db.replace(existing._id, status);
+  else await ctx.db.insert("federal_status", status);
+}
 
-      if (existing) {
-        await ctx.db.patch(existing._id, {
-          total: snapshot.total,
-          aiCount: snapshot.aiCount,
-          aiShare: snapshot.aiShare,
-          topKeywords: snapshot.topKeywords,
-          examples: snapshot.examples,
-        });
-      } else {
-        await ctx.db.insert("ai_skill_snapshots", snapshot);
-      }
-    }
-  },
+export const recordAttempt = internalMutation({
+  args: statusFields,
+  handler: (ctx, args) => saveStatus(ctx, args),
 });
 
-export const updateMetadata = internalMutation({
-  args: { key: v.string(), value: v.string() },
+export const storeSnapshot = internalMutation({
+  args: snapshotFields,
   handler: async (ctx, args) => {
+    const all = args.groups.find((group) => group.code === "all");
+    if (
+      args.methodVersion !== FEDERAL_METHOD_VERSION ||
+      !all ||
+      all.total !== args.available
+    )
+      throw new Error("Incomplete federal snapshot");
+    for (const group of args.groups) {
+      if (
+        group.total !== new Set(group.announcementIds).size ||
+        group.matches < 0 ||
+        group.matches > group.total
+      )
+        throw new Error("Invalid announcement counts");
+    }
     const existing = await ctx.db
-      .query("metadata")
-      .withIndex("by_key", (q) => q.eq("key", args.key))
-      .first();
-
-    if (existing) {
-      await ctx.db.patch(existing._id, { value: args.value });
-    } else {
-      await ctx.db.insert("metadata", args);
-    }
+      .query("federal_snapshots")
+      .withIndex("by_method_date", (q) =>
+        q.eq("methodVersion", args.methodVersion).eq("date", args.date),
+      )
+      .unique();
+    if (existing && existing.collectedAt > args.collectedAt) return;
+    if (existing) await ctx.db.replace(existing._id, args);
+    else await ctx.db.insert("federal_snapshots", args);
+    await saveStatus(ctx, {
+      attemptedAt: args.collectedAt,
+      state: "complete",
+      retrieved: args.available,
+      available: args.available,
+    });
   },
 });
 
-// Clean up snapshots older than retention period
 export const cleanupOldSnapshots = internalMutation({
   args: { retentionDays: v.number() },
   handler: async (ctx, args) => {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - args.retentionDays);
-    const cutoff = cutoffDate.toISOString().split("T")[0];
-
-    const oldSnapshots = await ctx.db
+    if (!Number.isInteger(args.retentionDays) || args.retentionDays < 90)
+      throw new Error("Retention must be at least 90 days");
+    const cutoff = new Date(Date.now() - args.retentionDays * 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+    const old = await ctx.db
       .query("ai_skill_snapshots")
-      .withIndex("by_date")
-      .filter((q) => q.lt(q.field("date"), cutoff))
+      .withIndex("by_date", (q) => q.lt("date", cutoff))
       .collect();
-
-    for (const snapshot of oldSnapshots) {
-      await ctx.db.delete(snapshot._id);
-    }
-
-    return { deleted: oldSnapshots.length, cutoffDate: cutoff };
+    const snapshots = await ctx.db
+      .query("federal_snapshots")
+      .withIndex("by_date", (q) => q.lt("date", cutoff))
+      .collect();
+    for (const row of [...old, ...snapshots]) await ctx.db.delete(row._id);
   },
 });
