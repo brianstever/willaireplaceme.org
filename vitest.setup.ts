@@ -5,23 +5,24 @@ import { afterEach, vi } from "vitest";
 
 // Cleanup after each test
 afterEach(() => {
-  cleanup();
+  if (typeof document !== "undefined") cleanup();
 });
 
 // Mock window.matchMedia
-Object.defineProperty(window, "matchMedia", {
-  writable: true,
-  value: vi.fn().mockImplementation((query: string) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
-});
+if (typeof window !== "undefined")
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
 
 // Mock ResizeObserver for chart components
 global.ResizeObserver = vi.fn().mockImplementation(() => ({
@@ -37,7 +38,9 @@ vi.mock("recharts", async () => {
   interface ResponsiveContainerProps {
     width?: number | string;
     height?: number | string;
-    children?: React.ReactNode | ((size: { width: number; height: number }) => React.ReactNode);
+    children?:
+      | React.ReactNode
+      | ((size: { width: number; height: number }) => React.ReactNode);
   }
 
   function ResponsiveContainer({
@@ -52,7 +55,11 @@ vi.mock("recharts", async () => {
         ? children({ width: resolvedWidth, height: resolvedHeight })
         : children;
 
-    return React.createElement("div", { style: { width: resolvedWidth, height: resolvedHeight } }, content);
+    return React.createElement(
+      "div",
+      { style: { width: resolvedWidth, height: resolvedHeight } },
+      content,
+    );
   }
 
   return {

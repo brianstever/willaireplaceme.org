@@ -123,7 +123,7 @@ describe("SectorFilter", () => {
 
     // Should show healthcare description in the visible tooltip area
     const tooltipText = screen.getByTestId("tooltip-text");
-    expect(tooltipText).toHaveTextContent(/hospitals/i);
+    expect(tooltipText).toHaveTextContent(/health care and social assistance/i);
     expect(tooltipText).toHaveClass("opacity-100");
   });
 
