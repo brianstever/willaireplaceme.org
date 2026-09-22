@@ -12,7 +12,7 @@ function raw(id: string, title = "General office work") {
       PositionTitle: title,
       OrganizationName: "Agency",
       PositionURI: `https://www.usajobs.gov/job/${id}`,
-      PositionCategory: [{ Code: "0301", Name: "Administration" }],
+      JobCategory: [{ Code: "0301", Name: "Administration" }],
     },
   };
 }
@@ -47,6 +47,10 @@ it("retrieves subsequent pages and requests an unfiltered baseline", async () =>
   expect(result.complete).toBe(true);
   expect(result.items).toHaveLength(501);
   expect(summarizeAnnouncements(result.items)[0].matches).toBe(1);
+  expect(
+    summarizeAnnouncements(result.items).find((group) => group.code === "0301")
+      ?.total,
+  ).toBe(501);
   const urls = fetcher.mock.calls.map((call) => new URL(call[0]));
   expect(urls[1].searchParams.get("Page")).toBe("2");
   expect(urls[0].searchParams.has("JobCategoryCode")).toBe(false);
