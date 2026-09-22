@@ -23,7 +23,7 @@ export function DashboardFooter() {
             ABOUT
           </Link>
           <span className="hidden sm:inline opacity-40">|</span>
-          <span className="hidden sm:inline">UPDATED MONTHLY</span>
+          <span className="hidden sm:inline">CHECKED DAILY</span>
           <a 
             href="https://github.com/brianstever/willaireplaceme.org"
             target="_blank"

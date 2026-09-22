@@ -8,11 +8,11 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 export const metadata: Metadata = {
   metadataBase: new URL("https://willaireplaceme.org"),
   title: {
-    default: "Will AI Replace Me? - Job Loss & AI Impact Tracker",
+    default: "Will AI Replace Me? - U.S. Labor Market Dashboard",
     template: "%s | Will AI Replace Me?",
   },
   description:
-    "Track job losses and labor market shifts in the age of AI. Interactive visualization of BLS employment data, JOLTS openings, and AI's impact on the workforce.",
+    "Explore U.S. job openings, unemployment, labor force participation, and AI keyword mentions in federal job announcements.",
   keywords: [
     "AI job loss",
     "AI impact",
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Will AI Replace Me?",
-    description: "Track job losses and AI's impact on the workforce",
+    description: "Explore U.S. labor market data and federal job announcements",
     url: "https://willaireplaceme.org",
     siteName: "Will AI Replace Me?",
     locale: "en_US",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Will AI Replace Me?",
-    description: "Track job losses and AI's impact on the workforce",
+    description: "Explore U.S. labor market data and federal job announcements",
   },
   alternates: {
     canonical: "https://willaireplaceme.org",

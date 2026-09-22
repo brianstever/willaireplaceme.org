@@ -54,48 +54,62 @@ export function DashboardChartPanel({
     viewMode === "openings"
       ? "Job Openings"
       : viewMode === "unemployment"
-      ? "Unemployment Rate"
-      : "Participation Rate";
+        ? "Unemployment Rate"
+        : "Participation Rate";
+
+  const loading =
+    viewMode === "openings"
+      ? jobData === undefined
+      : viewMode === "unemployment"
+        ? unemploymentByIndustry === undefined
+        : participationRate === undefined;
+  const hasData =
+    viewMode === "openings"
+      ? jobData?.some((row) => selectedSectors.includes(row.sector))
+      : viewMode === "unemployment"
+        ? unemploymentByIndustry?.some((row) =>
+            selectedUnemploymentSectors.includes(row.sector),
+          )
+        : !!participationRate?.history.length;
 
   return (
     <section
       id="chart-panel"
       role="tabpanel"
+      aria-labelledby={`tab-${viewMode}`}
       className="h-[550px] md:h-[600px] flex flex-col"
-      aria-label="Data visualization"
     >
       <ChartErrorBoundary chartName={chartName}>
-        {viewMode === "openings" ? (
-          jobData && jobData.length > 0 ? (
-            <JobChart
-              data={jobData}
-              selectedSectors={selectedSectors}
-              selectedRange={selectedRange}
-              onRangeChange={onRangeChange}
-            />
-          ) : (
-            <ChartSkeleton />
-          )
+        {loading ? (
+          <ChartSkeleton />
+        ) : !hasData ? (
+          <p
+            role="status"
+            className="flex-1 flex items-center justify-center text-sm text-muted-foreground"
+          >
+            No data is available for this selection.
+          </p>
+        ) : viewMode === "openings" ? (
+          <JobChart
+            data={jobData!}
+            selectedSectors={selectedSectors}
+            selectedRange={selectedRange}
+            onRangeChange={onRangeChange}
+          />
         ) : viewMode === "unemployment" ? (
-          unemploymentRate?.history && unemploymentRate.history.length > 0 ? (
-            <UnemploymentChart
-              data={unemploymentRate.history}
-              multiData={unemploymentByIndustry}
-              selectedSectors={selectedUnemploymentSectors}
-              selectedRange={selectedRange}
-              onRangeChange={onRangeChange}
-            />
-          ) : (
-            <ChartSkeleton />
-          )
-        ) : participationRate?.history && participationRate.history.length > 0 ? (
-          <ParticipationChart
-            data={participationRate.history}
+          <UnemploymentChart
+            data={unemploymentRate?.history ?? []}
+            multiData={unemploymentByIndustry}
+            selectedSectors={selectedUnemploymentSectors}
             selectedRange={selectedRange}
             onRangeChange={onRangeChange}
           />
         ) : (
-          <ChartSkeleton />
+          <ParticipationChart
+            data={participationRate!.history}
+            selectedRange={selectedRange}
+            onRangeChange={onRangeChange}
+          />
         )}
       </ChartErrorBoundary>
     </section>
