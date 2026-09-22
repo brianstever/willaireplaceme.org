@@ -33,7 +33,7 @@
     "@types/node": "^24.13.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vitejs/plugin-react": "^5.1.2",
+    "@vitejs/plugin-react": "^6.1.1",
     "@vitest/coverage-v8": "^4.1.11",
     "concurrently": "^9.1.0",
     "convex-test": "^0.0.59",
